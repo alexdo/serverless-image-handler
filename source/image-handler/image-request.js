@@ -28,7 +28,7 @@ class ImageRequest {
             this.edits = this.parseImageEdits(event, this.requestType);
             this.originalImage = await this.getOriginalImage(this.bucket, this.key);
             const outputFormat = this.getOutputFormat(event);
-            if(outputFormat) {
+            if (outputFormat) {
                 this.outputFormat = outputFormat;
             }
             return Promise.resolve(this);
@@ -50,14 +50,30 @@ class ImageRequest {
         const request = s3.getObject(imageLocation).promise();
         try {
             const originalImage = await request;
-            this.ContentType = originalImage.ContentType;
-            this.Expires = new Date(originalImage.Expires).toUTCString();
-            this.LastModified = new Date(originalImage.LastModified).toUTCString();
+
+            if (originalImage.ContentType) {
+                this.ContentType = originalImage.ContentType;
+            }
+
+            if (originalImage.Expires) {
+                const expiresDate = new Date(originalImage.Expires);
+                if (!isNaN(expiresDate)) {
+                    this.Expires = expiresDate.toUTCString();
+                }
+            }
+
+            if (originalImage.LastModified) {
+                const lastModifiedDate = new Date(originalImage.LastModified);
+                if (!isNaN(lastModifiedDate)) {
+                    this.LastModified = lastModifiedDate.toUTCString();
+                }
+            }
+
             return Promise.resolve(originalImage.Body);
         }
         catch(err) {
             return Promise.reject({
-                status: ("NoSuchKey" == err.code) ? 404 : 500,
+                status: ("NoSuchKey" === err.code) ? 404 : 500,
                 code: err.code,
                 message: err.message
             })
