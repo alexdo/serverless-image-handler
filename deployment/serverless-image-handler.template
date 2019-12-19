@@ -50,6 +50,10 @@
                     "Parameters": [ "SourceBuckets" ]
                 },
                 {
+                    "Label": { "default": "Optimization" },
+                    "Parameters": [ "AutoWebP" ]
+                },
+                {
                     "Label": { "default": "Demo UI" },
                     "Parameters": [ "DeployDemoUI" ]
                 },
