@@ -23,7 +23,7 @@ exports.handler = async (event) => {
         console.log(request);
         const processedRequest = await imageHandler.process(request);
         const headers = getResponseHeaders();
-        headers["Content-Type"] = request.ContentType;
+        headers["Content-Type"] = request.outputFormat === 'webp' ? 'image/webp' : request.ContentType;
         headers["Expires"] = request.Expires;
         headers["Last-Modified"] = request.LastModified;
         const response = {
