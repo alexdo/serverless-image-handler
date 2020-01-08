@@ -26,7 +26,11 @@ class ImageRequest {
             this.bucket = this.parseImageBucket(event, this.requestType);
             this.key = this.parseImageKey(event, this.requestType);
             this.edits = this.parseImageEdits(event, this.requestType);
-            this.originalImage = await this.getOriginalImage(this.bucket, this.key)
+            this.originalImage = await this.getOriginalImage(this.bucket, this.key);
+            const outputFormat = this.getOutputFormat(event);
+            if (outputFormat) {
+                this.outputFormat = outputFormat;
+            }
             return Promise.resolve(this);
         } catch (err) {
             return Promise.reject(err);
@@ -46,11 +50,30 @@ class ImageRequest {
         const request = s3.getObject(imageLocation).promise();
         try {
             const originalImage = await request;
+
+            if (originalImage.ContentType) {
+                this.ContentType = originalImage.ContentType;
+            }
+
+            if (originalImage.Expires) {
+                const expiresDate = new Date(originalImage.Expires);
+                if (!isNaN(expiresDate)) {
+                    this.Expires = expiresDate.toUTCString();
+                }
+            }
+
+            if (originalImage.LastModified) {
+                const lastModifiedDate = new Date(originalImage.LastModified);
+                if (!isNaN(lastModifiedDate)) {
+                    this.LastModified = lastModifiedDate.toUTCString();
+                }
+            }
+
             return Promise.resolve(originalImage.Body);
         }
         catch(err) {
             return Promise.reject({
-                status: 500,
+                status: ("NoSuchKey" === err.code) ? 404 : 500,
                 code: err.code,
                 message: err.message
             })
@@ -194,7 +217,7 @@ class ImageRequest {
         if (path !== undefined) {
             const splitPath = path.split("/");
             const encoded = splitPath[splitPath.length - 1];
-            const toBuffer = new Buffer(encoded, 'base64');
+            const toBuffer = Buffer.from(encoded, 'base64');
             try {
                 return JSON.parse(toBuffer.toString('ascii'));
             } catch (e) {
@@ -231,6 +254,20 @@ class ImageRequest {
             const buckets = formatted.split(',');
             return buckets;
         }
+    }
+
+    /**
+    * Return the output format depending on the accepts headers
+    * @param {Object} event - The request body.
+    */
+    getOutputFormat(event) {
+        const autoWebP = process.env.AUTO_WEBP;
+        const headers = event.headers || {};
+        const acceptHeader = headers.Accept || headers.accept;
+        if (autoWebP && typeof acceptHeader === 'string' && acceptHeader.includes('image/webp')) {
+            return 'webp';
+        }
+        return null;
     }
 }
 

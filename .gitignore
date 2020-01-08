@@ -2,10 +2,13 @@
 **/dist
 **/global-s3-assets
 **/regional-s3-assets
+**/regional-s3-assets*
 **/open-source
 **/.zip
 **/tmp
 **/out-tsc
+# solution-specific compile
+**/build-all.sh
 
 # dependencies
 **/node_modules
