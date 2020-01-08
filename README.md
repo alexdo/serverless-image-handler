@@ -32,6 +32,10 @@ chmod +x ./build-s3-dist.sh
 
 > Note: The build-s3-dist script expects the bucket name as one of its parameters, and this value should not include the region suffix.
 
+**IMPORTANT:** You need to build this on a linux system with Node 12 LTS!
+It's mandatory that the compiled node modules are compatible with your lambda execution environment! (= same node version and same os family)   
+Lambda runs on Linux 64bit. This template is currently configured to use Node 12.x.
+
 * Deploy the distributable to an Amazon S3 bucket in your account (you must have the AWS CLI installed)
 ```bash
 aws s3 cp ./regional-s3-assets/ s3://my-bucket/serverless-image-handler/my-version/ --recursive --acl bucket-owner-full-control
