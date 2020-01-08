@@ -22,8 +22,7 @@ chmod +x ./run-unit-tests.sh
 
 * Create an Amazon S3 Bucket
 ```
-aws s3 mb s3://my-bucket-us-east-1 --region us-east-1
-```
+aws s3 mb s3://my-bucket --region eu-central-1
 
 * Navigate to the deployment folder and build the distributable
 ```bash
@@ -35,7 +34,7 @@ chmod +x ./build-s3-dist.sh
 
 * Deploy the distributable to an Amazon S3 bucket in your account (you must have the AWS CLI installed)
 ```bash
-aws s3 cp ./regional-s3-assets/ s3://my-bucket-us-east-1/serverless-image-handler/my-version/ --recursive --acl bucket-owner-full-control
+aws s3 cp ./regional-s3-assets/ s3://my-bucket/serverless-image-handler/my-version/ --recursive --acl bucket-owner-full-control
 ```
 
 * Get the link of the serverless-image-handler.template uploaded to your Amazon S3 bucket
