@@ -667,14 +667,7 @@
                 "Timeout": 30,
                 "Runtime": "nodejs12.x",
                 "Role": { "Fn::GetAtt": [ "CustomResourceRole", "Arn" ] },
-                "Handler": "index.handler",
-                "Environment" : {
-                    "Variables": {
-                        "LOG_LEVEL": {
-                            "Ref": "LogLevel"
-                        }
-                    }
-                }
+                "Handler": "index.handler"
             }
         },
         "CustomResourceRole": {

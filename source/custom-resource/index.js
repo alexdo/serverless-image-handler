@@ -13,10 +13,9 @@
 
 'use strict';
 
-const logger = require('./lib/logger');
+console.log('Loading function');
 
-logger.log('Loading function');
-
+const AWS = require('aws-sdk');
 const https = require('https');
 const url = require('url');
 const moment = require('moment');
@@ -28,7 +27,7 @@ const uuidv4 = require('uuid/v4');
  * Request handler.
  */
 exports.handler = (event, context, callback) => {
-    logger.log('Received event:', JSON.stringify(event, null, 2));
+    console.log('Received event:', JSON.stringify(event, null, 2));
 
     let responseStatus = 'FAILED';
     let responseData = {};
@@ -50,14 +49,14 @@ exports.handler = (event, context, callback) => {
 
                 let _usageMetrics = new UsageMetrics();
                 _usageMetrics.sendAnonymousMetric(_metric).then((data) => {
-                    logger.log(data);
-                    logger.log('Annonymous metrics successfully sent.');
+                    console.log(data);
+                    console.log('Annonymous metrics successfully sent.');
                     sendResponse(event, callback, context.logStreamName, responseStatus, responseData);
                 }).catch((err) => {
                     responseData = {
                         Error: 'Sending anonymous delete metric failed'
                     };
-                    logger.error([responseData.Error, ':\n', err].join(''));
+                    console.log([responseData.Error, ':\n', err].join(''));
                     sendResponse(event, callback, context.logStreamName, responseStatus, responseData);
                 });
             } else {
@@ -72,7 +71,7 @@ exports.handler = (event, context, callback) => {
     if (event.RequestType === 'Create') {
         if (event.ResourceProperties.customAction === 'putConfigFile') {
             let _s3Helper = new S3Helper();
-            logger.log(event.ResourceProperties.configItem);
+            console.log(event.ResourceProperties.configItem);
             _s3Helper.putConfigFile(event.ResourceProperties.configItem, event.ResourceProperties.destS3Bucket, event.ResourceProperties.destS3key).then((data) => {
                 responseStatus = 'SUCCESS';
                 responseData = setting;
@@ -81,7 +80,7 @@ exports.handler = (event, context, callback) => {
                 responseData = {
                     Error: `Saving config file to ${event.ResourceProperties.destS3Bucket}/${event.ResourceProperties.destS3key} failed`
                 };
-                logger.error([responseData.Error, ':\n', err].join(''));
+                console.log([responseData.Error, ':\n', err].join(''));
                 sendResponse(event, callback, context.logStreamName, responseStatus, responseData);
             });
 
@@ -98,7 +97,7 @@ exports.handler = (event, context, callback) => {
                 responseData = {
                     Error: `Copy of website assets failed`
                 };
-                logger.error([responseData.Error, ':\n', err].join(''));
+                console.log([responseData.Error, ':\n', err].join(''));
                 sendResponse(event, callback, context.logStreamName, responseStatus, responseData);
             });
 
@@ -120,7 +119,7 @@ exports.handler = (event, context, callback) => {
                 responseData = {
                     Error: `Could not find the following source bucket(s) in your account: ${err}. Please specify at least one source bucket that exists within your account and try again. If specifying multiple source buckets, please ensure that they are comma-separated.`
                 };
-                logger.error(responseData.Error);
+                console.log(responseData.Error);
                 sendResponse(event, callback, context.logStreamName, responseStatus, responseData, responseData.Error);
             });
 
@@ -138,10 +137,10 @@ exports.handler = (event, context, callback) => {
 
                 let _usageMetrics = new UsageMetrics();
                 _usageMetrics.sendAnonymousMetric(_metric).then((data) => {
-                    logger.log(data);
-                    logger.log('Annonymous metrics successfully sent.');
+                    console.log(data);
+                    console.log('Annonymous metrics successfully sent.');
                 }).catch((err) => {
-                    logger.error(`Sending anonymous launch metric failed: ${err}`);
+                    console.log(`Sending anonymous launch metric failed: ${err}`);
                 });
 
                 sendResponse(event, callback, context.logStreamName, 'SUCCESS', {});
@@ -168,13 +167,13 @@ exports.handler = (event, context, callback) => {
                 responseData = {
                     Error: `Copy of website assets failed`
                 };
-                logger.error([responseData.Error, ':\n', err].join(''));
+                console.log([responseData.Error, ':\n', err].join(''));
                 sendResponse(event, callback, context.logStreamName, responseStatus, responseData);
             });
 
         } else if (event.ResourceProperties.customAction === 'putConfigFile') {
             let _s3Helper = new S3Helper();
-            logger.log(event.ResourceProperties.configItem);
+            console.log(event.ResourceProperties.configItem);
             _s3Helper.putConfigFile(event.ResourceProperties.configItem, event.ResourceProperties.destS3Bucket, event.ResourceProperties.destS3key).then((data) => {
                 responseStatus = 'SUCCESS';
                 responseData = setting;
@@ -183,7 +182,7 @@ exports.handler = (event, context, callback) => {
                 responseData = {
                     Error: `Saving config file to ${event.ResourceProperties.destS3Bucket}/${event.ResourceProperties.destS3key} failed`
                 };
-                logger.error([responseData.Error, ':\n', err].join(''));
+                console.log([responseData.Error, ':\n', err].join(''));
                 sendResponse(event, callback, context.logStreamName, responseStatus, responseData);
             });
 
@@ -198,7 +197,7 @@ exports.handler = (event, context, callback) => {
                 responseData = {
                     Error: `Could not find the following source bucket(s) in your account: ${err}. Please specify at least one source bucket that exists within your account and try again. If specifying multiple source buckets, please ensure that they are comma-separated.`
                 };
-                logger.error(responseData.Error);
+                console.log(responseData.Error);
                 sendResponse(event, callback, context.logStreamName, responseStatus, responseData, responseData.Error);
             });
 
@@ -226,7 +225,7 @@ let sendResponse = function(event, callback, logStreamName, responseStatus, resp
         Data: responseData,
     });
 
-    logger.log('RESPONSE BODY:\n', responseBody);
+    console.log('RESPONSE BODY:\n', responseBody);
     const parsedUrl = url.parse(event.ResponseURL);
     const options = {
         hostname: parsedUrl.hostname,
@@ -240,13 +239,13 @@ let sendResponse = function(event, callback, logStreamName, responseStatus, resp
     };
 
     const req = https.request(options, (res) => {
-        logger.log('STATUS:', res.statusCode);
-        logger.log('HEADERS:', JSON.stringify(res.headers));
+        console.log('STATUS:', res.statusCode);
+        console.log('HEADERS:', JSON.stringify(res.headers));
         callback(null, 'Successfully sent stack response!');
     });
 
     req.on('error', (err) => {
-        logger.error('sendResponse Error:\n', err);
+        console.log('sendResponse Error:\n', err);
         callback(err);
     });
 

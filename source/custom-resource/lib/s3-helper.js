@@ -17,7 +17,6 @@
 
 'use strict';
 
-const logger = require('logger');
 const AWS = require('aws-sdk');
 const fs = require('fs');
 
@@ -45,7 +44,7 @@ class s3Helper {
      */
     async validateBuckets(strBuckets) {
         const formatted = strBuckets.replace(/\s/g,'');
-        logger.log(`Attempting to check if the following buckets exist: ${formatted}`);
+        console.log(`Attempting to check if the following buckets exist: ${formatted}`);
         const buckets = formatted.split(',');
         const errorBuckets = [];
         for (let i = 0; i < buckets.length; i++) {
@@ -53,10 +52,10 @@ class s3Helper {
             const params = { Bucket: buckets[i] };
             try {
                 await s3.headBucket(params).promise();
-                logger.log(`Found bucket: ${buckets[i]}`);
+                console.log(`Found bucket: ${buckets[i]}`);
             } catch (err) {
-                logger.error(`Could not find bucket: ${buckets[i]}`);
-                logger.error(err);
+                console.log(`Could not find bucket: ${buckets[i]}`);
+                console.log(err);
                 errorBuckets.push(buckets[i]);
             }
         }
@@ -72,8 +71,8 @@ class s3Helper {
      * @param {JSON} destS3key -  S3 destination key.
      */
     putConfigFile(content, destS3Bucket, destS3key) {
-        logger.log(`Attempting to save content blob destination location: ${destS3Bucket}/${destS3key}`);
-        logger.log(JSON.stringify(content));
+        console.log(`Attempting to save content blob destination location: ${destS3Bucket}/${destS3key}`);
+        console.log(JSON.stringify(content));
 
         let _self = this;
         return new Promise((resolve, reject) => {
@@ -100,10 +99,10 @@ class s3Helper {
             });
             s3.putObject(params, function(err, data) {
                 if (err) {
-                    logger.error(err);
+                    console.log(err);
                     reject(`Error creating ${destS3Bucket}/${destS3key} content \n${err}`);
                 } else {
-                    logger.log(data);
+                    console.log(data);
                     resolve(data);
                 }
             });
@@ -111,9 +110,9 @@ class s3Helper {
     }
 
     copyAssets(manifestKey, sourceS3Bucket, sourceS3prefix, destS3Bucket) {
-        logger.log(`source bucket: ${sourceS3Bucket}`);
-        logger.log(`source prefix: ${sourceS3prefix}`);
-        logger.log(`destination bucket: ${destS3Bucket}`);
+        console.log(`source bucket: ${sourceS3Bucket}`);
+        console.log(`source prefix: ${sourceS3prefix}`);
+        console.log(`destination bucket: ${destS3Bucket}`);
 
         let _self = this;
         return new Promise((resolve, reject) => {
@@ -122,7 +121,7 @@ class s3Helper {
 
                 fs.readFile(_self.downloadLocation, 'utf8', function(err, data) {
                     if (err) {
-                        logger.error(err);
+                        console.log(err);
                         reject(err);
                     }
 
@@ -132,17 +131,17 @@ class s3Helper {
                         reject('Unable to validate downloaded manifest file JSON');
                     } else {
                         _self._uploadFile(_manifest.files, 0, destS3Bucket, `${sourceS3Bucket}/${sourceS3prefix}`).then((resp) => {
-                            logger.log(resp);
+                            console.log(resp);
                             resolve(resp)
                         }).catch((err) => {
-                            logger.error(err);
+                            console.log(err);
                             reject(err);
                         });
                     }
 
                 });
             }).catch((err) => {
-                logger.error(err);
+                console.log(err);
                 reject(err);
             });
 
@@ -157,11 +156,11 @@ class s3Helper {
     _validateJSON(body) {
         try {
             let data = JSON.parse(body);
-            logger.log(data);
+            console.log(data);
             return data;
         } catch (e) {
             // failed to parse
-            logger.error('Manifest file contains invalid JSON.');
+            console.log('Manifest file contains invalid JSON.');
             return null;
         }
     };
@@ -182,16 +181,16 @@ class s3Helper {
                 params.Metadata = {
                     'Content-Type': params.ContentType
                 };
-                logger.log(params);
+                console.log(params);
                 let s3 = new AWS.S3({
                     signatureVersion: 'v4'
                 });
                 s3.copyObject(params, function(err, data) {
                     if (err) {
-                        logger.error(err);
+                        console.log(err);
                         reject(`error copying ${sourceS3prefix}/${filelist[index]}\n${err}`);
                     } else {
-                        logger.log(`${sourceS3prefix}/${filelist[index]} uploaded successfully`);
+                        console.log(`${sourceS3prefix}/${filelist[index]} uploaded successfully`);
                         let _next = index + 1;
                         _self._uploadFile(filelist, _next, destS3Bucket, sourceS3prefix).then((resp) => {
                             resolve(resp);
@@ -223,7 +222,7 @@ class s3Helper {
                 Key: s3Key
             };
 
-            logger.log(`Attempting to download manifest: ${JSON.stringify(params)}`);
+            console.log(`Attempting to download manifest: ${JSON.stringify(params)}`);
 
             // check to see if the manifest file exists
             let s3 = new AWS.S3({
@@ -231,16 +230,16 @@ class s3Helper {
             });
             s3.headObject(params, function(err, metadata) {
                 if (err) {
-                    logger.error(err);
+                    console.log(err);
                 }
 
                 if (err && err.code === 'NotFound') {
                     // Handle no object on cloud here
-                    logger.error('manifest file doesn\'t exist');
+                    console.log('manifest file doesn\'t exist');
                     reject('Manifest file was not found.');
                 } else {
-                    logger.log('manifest file exists');
-                    logger.log(metadata);
+                    console.log('manifest file exists');
+                    console.log(metadata);
                     let file = require('fs').createWriteStream(_self.downloadLocation);
 
                     s3.getObject(params).
@@ -249,7 +248,7 @@ class s3Helper {
                     }).
                     on('httpDone', function() {
                         file.end();
-                        logger.log('manifest downloaded for processing...');
+                        console.log('manifest downloaded for processing...');
                         resolve('success');
                     }).
                     send();
