@@ -751,7 +751,7 @@
                 "ServiceToken": { "Fn::GetAtt" : [ "CustomResourceFunction", "Arn" ]},
                 "Region": { "Ref" : "AWS::Region" },
                 "manifestKey": { "Fn::Join": [ "/", [ { "Fn::FindInMap": [ "SourceCode", "General", "KeyPrefix" ]}, "demo-ui-manifest.json" ]]},
-                "sourceS3Bucket": { "Fn::Join": [ "-", [{ "Fn::FindInMap": [ "SourceCode", "General", "S3Bucket" ]}, { "Ref": "AWS::Region" }]]},
+                "sourceS3Bucket": { "Fn::FindInMap": [ "SourceCode", "General", "S3Bucket" ] },
                 "sourceS3key": { "Fn::Join": ["/", [{ "Fn::FindInMap": [ "SourceCode", "General", "KeyPrefix" ]}, "demo-ui" ]]},
                 "destS3Bucket": { "Ref" : "DemoBucket" },
                 "version": "%%VERSION%%",
