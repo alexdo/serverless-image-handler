@@ -27,7 +27,7 @@ describe('process()', function() {
             const getObject = S3.prototype.getObject = sinon.stub();
             getObject.returns({
                 promise: () => { return {
-                  Body: new Buffer('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
+                  Body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
                 }}
             })
             // ----

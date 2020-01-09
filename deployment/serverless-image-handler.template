@@ -8,6 +8,12 @@
             "Type" : "String",
             "AllowedValues" : [ "Yes", "No" ]
         },
+        "LogLevel" : {
+            "Description" : "Lambda function log level",
+            "Default" : "error",
+            "Type" : "String",
+            "AllowedValues" : [ "error", "warn", "debug" ]
+        },
         "CorsEnabled" : {
             "Description" : "Would you like to enable Cross-Origin Resource Sharing (CORS) for the image handler API? Select 'Yes' if so.",
             "Default" : "No",
@@ -374,6 +380,9 @@
                         "AUTO_WEBP" : {
                             "Ref" : "AutoWebP"
                         },
+                        "LOG_LEVEL" : {
+                            "Ref" : "LogLevel"
+                        },
                         "CORS_ENABLED" : {
                             "Ref" : "CorsEnabled"
                         },
@@ -658,7 +667,14 @@
                 "Timeout": 30,
                 "Runtime": "nodejs12.x",
                 "Role": { "Fn::GetAtt": [ "CustomResourceRole", "Arn" ] },
-                "Handler": "index.handler"
+                "Handler": "index.handler",
+                "Environment" : {
+                    "Variables": {
+                        "LOG_LEVEL": {
+                            "Ref": "LogLevel"
+                        }
+                    }
+                }
             }
         },
         "CustomResourceRole": {

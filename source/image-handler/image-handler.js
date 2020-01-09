@@ -13,6 +13,7 @@
 
 const AWS = require('aws-sdk');
 const sharp = require('sharp');
+const logger = require('./logger');
 
 class ImageHandler {
 
@@ -138,7 +139,7 @@ class ImageHandler {
             const response = (await request).FaceDetails[faceIdx].BoundingBox;
             return Promise.resolve(await response);
         } catch (err) {
-            console.log(err);
+            logger.error(err);
             if (err.message === "Cannot read property 'BoundingBox' of undefined") {
                 return Promise.reject({
                     status: 400,

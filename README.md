@@ -6,6 +6,7 @@ It includes:
 * Automatic WebP delivery in case the Browser supports it ([source](https://github.com/awslabs/serverless-image-handler/pull/152))
 * Fixed Deprecation Warning ([source](https://github.com/awslabs/serverless-image-handler/pull/174))
 * S3 Header Forwarding ([source](https://github.com/awslabs/serverless-image-handler/pull/158))
+* Configurable log verbosity
 * Working Unit Tests for all the new features
 * Fixes for interoperability errors between those features
 * Fix for linux-only build in upstream

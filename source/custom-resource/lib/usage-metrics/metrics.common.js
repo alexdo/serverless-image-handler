@@ -16,7 +16,10 @@
  */
 
 'use strict';
-let https = require('https');
+import {log} from "../logger";
+
+const https = require('https');
+const logger = require('../logger');
 
 // Metrics class for sending usage metrics to sb endpoints
 class Metrics {
@@ -62,8 +65,8 @@ class Metrics {
             request.end();
 
             request.on('error', (e) => {
-                console.error(e);
-                reject(['Error occurred when sending metric request.', JSON.stringify(_payload)].join(' '));
+                logger.error(e);
+                reject(['Error occurred when sending metric request.', JSON.stringify(_options)].join(' '));
             });
         });
 
