@@ -20,6 +20,12 @@
             "Type" : "String",
             "AllowedValues" : [ "Yes", "No" ]
         },
+        "DeployImageHandlerDistribution" : {
+            "Description" : "Would you like your image handler to be available via its own cloud front distribution?",
+            "Default" : "Yes",
+            "Type" : "String",
+            "AllowedValues" : [ "Yes", "No" ]
+        },
         "CorsOrigin" : {
             "Description" : "If you selected 'Yes' above, please specify an origin value here. A wildcard (*) value will support any origin. We recommend specifying an origin (i.e. https://example.domain) to restrict cross-site access to your API.",
             "Default" : "*",
@@ -72,7 +78,8 @@
     },
     "Conditions": {
         "DeployDemoUICondition": { "Fn::Equals": [ { "Ref": "DeployDemoUI" }, "Yes" ] },
-        "EnableCorsCondition" : { "Fn::Equals": [ { "Ref": "CorsEnabled" }, "Yes" ] }
+        "EnableCorsCondition" : { "Fn::Equals": [ { "Ref": "CorsEnabled" }, "Yes" ] },
+        "DeployImageHandlerDistributionCondition" : { "Fn::Equals": [ { "Ref": "DeployImageHandlerDistribution" }, "Yes" ] }
     },
     "Mappings": {
         "Send": {
@@ -126,6 +133,7 @@
         },
         "ImageHandlerDistribution": {
             "Type": "AWS::CloudFront::Distribution",
+            "Condition" : "DeployImageHandlerDistributionCondition",
             "Properties": {
                 "DistributionConfig": {
                     "Origins": [{
@@ -766,7 +774,7 @@
                 "ServiceToken": { "Fn::GetAtt" : [ "CustomResourceFunction", "Arn" ]},
                 "Region": { "Ref" : "AWS::Region" },
                 "configItem" : {
-                    "apiEndpoint" : { "Fn::Sub" : "https://${ImageHandlerDistribution.DomainName}" }
+                    "apiEndpoint" : { "Fn::Sub": "${ImageHandlerApi}.execute-api.${AWS::Region}.amazonaws.com/image" }
                 } ,
                 "destS3Bucket" : { "Ref" : "DemoBucket" },
                 "destS3key" : "demo-ui-config.js",
@@ -817,6 +825,11 @@
     "Outputs" : {
         "ApiEndpoint" : {
             "Description" : "Link to API endpoint for sending image requests to.",
+            "Value" : { "Fn::Sub": "${ImageHandlerApi}.execute-api.${AWS::Region}.amazonaws.com/image" }
+        },
+        "ApiDistribution" : {
+            "Condition" : "DeployImageHandlerDistributionCondition",
+            "Description" : "Link to CloudFrond endpoint for sending image requests to.",
             "Value" : { "Fn::Sub" : "https://${ImageHandlerDistribution.DomainName}" }
         },
         "DemoUrl" : {

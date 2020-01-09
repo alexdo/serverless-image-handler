@@ -7,6 +7,7 @@ It includes:
 * Fixed Deprecation Warning ([source](https://github.com/awslabs/serverless-image-handler/pull/174))
 * S3 Header Forwarding ([source](https://github.com/awslabs/serverless-image-handler/pull/158))
 * Configurable log verbosity
+* Allow skipping of CloudFront Distribution creation via parameter
 * Working Unit Tests for all the new features
 * Fixes for interoperability errors between those features
 * Fix for linux-only build in upstream
