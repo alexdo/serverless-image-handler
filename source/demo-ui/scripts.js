@@ -39,6 +39,7 @@ function getPreviewImage() {
     const _grayscale = $(`#editor-grayscale`).first().prop("checked");
     const _flip = $(`#editor-flip`).first().prop("checked");
     const _flop = $(`#editor-flop`).first().prop("checked");
+    const _sharpen = $(`#editor-sharpen`).first().prop("checked");
     const _negative = $(`#editor-negative`).first().prop("checked");
     const _flatten = $(`#editor-flatten`).first().prop("checked");
     const _normalize = $(`#editor-normalize`).first().prop("checked");
@@ -46,6 +47,8 @@ function getPreviewImage() {
     const _smartCrop = $(`#editor-smart-crop`).first().prop("checked");
     const _smartCropIndex = $(`#editor-smart-crop-index`).first().val();
     const _smartCropPadding = $(`#editor-smart-crop-padding`).first().val();
+    const _quality = $(`#editor-quality`).first().val();
+    const _outputFormat = $(`#editor-output-format`).first().val();
     // Setup the edits object
     const _edits = {}
     _edits.resize = {};
@@ -59,6 +62,7 @@ function getPreviewImage() {
     if (_grayscale) { _edits.grayscale = _grayscale }
     if (_flip) { _edits.flip = _flip }
     if (_flop) { _edits.flop = _flop }
+    if (_sharpen) { _edits.sharpen = _sharpen }
     if (_negative) { _edits.negate = _negative }
     if (_flatten) { _edits.flatten = _flatten }
     if (_normalize) { _edits.normalise = _normalize }
@@ -82,7 +86,16 @@ function getPreviewImage() {
         bucket: bucketName,
         key: keyName,
         edits: _edits
+    };
+
+    if (_quality !== "") {
+        request.quality = Number.parseInt(_quality, 10);
     }
+
+    if (_outputFormat !== "") {
+        request.outputFormat = _outputFormat;
+    }
+
     if (Object.keys(request.edits).length === 0) { delete request.edits };
     console.log(request);
     // Setup encoded request

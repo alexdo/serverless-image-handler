@@ -27,7 +27,7 @@ class ImageRequest {
             this.key = this.parseImageKey(event, this.requestType);
             this.edits = this.parseImageEdits(event, this.requestType);
             this.originalImage = await this.getOriginalImage(this.bucket, this.key);
-            const outputFormat = this.getOutputFormat(event);
+            const outputFormat = this.getOutputFormat(event, this.requestType);
             if (outputFormat) {
                 this.outputFormat = outputFormat;
             }
@@ -259,14 +259,26 @@ class ImageRequest {
     /**
     * Return the output format depending on the accepts headers
     * @param {Object} event - The request body.
+    * @param {String} requestType - The request type.
     */
-    getOutputFormat(event) {
+    getOutputFormat(event, requestType) {
+        if (requestType === "Default") {
+            // allow setting a specific output format via parameter
+            const decoded = this.decodeRequest(event);
+            if (decoded.outputFormat) {
+                return decoded.outputFormat;
+            }
+        }
+
+        // automatically deliver webp images when enabled and supported by the browser
         const autoWebP = process.env.AUTO_WEBP;
         const headers = event.headers || {};
         const acceptHeader = headers.Accept || headers.accept;
         if (autoWebP && typeof acceptHeader === 'string' && acceptHeader.includes('image/webp')) {
             return 'webp';
         }
+
+        // keep the images format by default
         return null;
     }
 }

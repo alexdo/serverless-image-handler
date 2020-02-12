@@ -79,7 +79,39 @@ describe('process()', function() {
             assert.deepEqual((request.originalImage !== result), true);
         });
     });
-    describe('003/noEditsSpecified', function() {
+    describe('003/withQuality', function() {
+        it(`Should pass if the output image is in a different format than the original image`, async function() {
+            // Arrange
+            const sinon = require('sinon');
+            // ---- Amazon S3 stub
+            const S3 = require('aws-sdk/clients/s3');
+            const getObject = S3.prototype.getObject = sinon.stub();
+            getObject.returns({
+                promise: () => { return {
+                  Body: new Buffer('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
+                }}
+            })
+            // ----
+            const request = {
+                requestType: "default",
+                bucket: "sample-bucket",
+                key: "sample-image-001.jpg",
+                outputFormat: "png",
+                quality: 50,
+                edits: {
+                    grayscale: true,
+                    flip: true
+                },
+                originalImage: new Buffer('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
+            }
+            // Act
+            const imageHandler = new ImageHandler();
+            const result = await imageHandler.process(request);
+            // Assert
+            assert.deepEqual((request.originalImage !== result), true);
+        });
+    });
+    describe('004/noEditsSpecified', function() {
         it(`Should pass if no edits are specified and the original image is returned`, async function() {
             // Arrange
             const sinon = require('sinon');

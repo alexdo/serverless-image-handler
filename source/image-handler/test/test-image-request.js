@@ -691,13 +691,14 @@ describe('getOutputFormat()', function () {
                 AUTO_WEBP: true
             };
             const event = {
+                path : '/eyJidWNrZXQiOiJ2YWxpZEJ1Y2tldCIsImtleSI6InZhbGlkS2V5IiwiZWRpdHMiOnsiZ3JheXNjYWxlIjp0cnVlfX0=',
                 headers: {
                     Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3"
                 }
             };
             // Act
             const imageRequest = new ImageRequest();
-            var result = imageRequest.getOutputFormat(event);
+            var result = imageRequest.getOutputFormat(event, 'Default');
             // Assert
             assert.deepEqual(result, "webp");
         });
@@ -709,13 +710,14 @@ describe('getOutputFormat()', function () {
                 AUTO_WEBP: true
             };
             const event = {
+                path : '/eyJidWNrZXQiOiJ2YWxpZEJ1Y2tldCIsImtleSI6InZhbGlkS2V5IiwiZWRpdHMiOnsiZ3JheXNjYWxlIjp0cnVlfX0=',
                 headers: {
                     Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/apng,*/*;q=0.8,application/signed-exchange;v=b3"
                 }
             };
             // Act
             const imageRequest = new ImageRequest();
-            var result = imageRequest.getOutputFormat(event);
+            var result = imageRequest.getOutputFormat(event, 'Default');
             // Assert
             assert.deepEqual(result, null);
         });
@@ -727,13 +729,14 @@ describe('getOutputFormat()', function () {
                 AUTO_WEBP: false
             };
             const event = {
+                path : '/eyJidWNrZXQiOiJ2YWxpZEJ1Y2tldCIsImtleSI6InZhbGlkS2V5IiwiZWRpdHMiOnsiZ3JheXNjYWxlIjp0cnVlfX0=',
                 headers: {
                     Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3"
                 }
             };
             // Act
             const imageRequest = new ImageRequest();
-            var result = imageRequest.getOutputFormat(event);
+            var result = imageRequest.getOutputFormat(event, 'Default');
             // Assert
             assert.deepEqual(result, null);
         });
@@ -742,13 +745,14 @@ describe('getOutputFormat()', function () {
         it(`Should pass if it returns null when AUTO_WEBP is not set with accepts header including webp`, function () {
             // Arrange
             const event = {
+                path : '/eyJidWNrZXQiOiJ2YWxpZEJ1Y2tldCIsImtleSI6InZhbGlkS2V5IiwiZWRpdHMiOnsiZ3JheXNjYWxlIjp0cnVlfX0=',
                 headers: {
                     Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3"
                 }
             };
             // Act
             const imageRequest = new ImageRequest();
-            var result = imageRequest.getOutputFormat(event);
+            var result = imageRequest.getOutputFormat(event, 'Default');
             // Assert
             assert.deepEqual(result, null);
         });
@@ -790,4 +794,32 @@ describe('getOutputFormat()', function () {
             // Assert
             assert.deepEqual(imageRequest, expectedResult);
         });
-    });});
+    });
+    describe('005/OutputFormatOverride', function () {
+        it(`Should pass if an output format is explicitly given`, function () {
+            // Arrange
+            const input = {
+                bucket:"validBucket",
+                key:"validKey",
+                outputFormat: 'png'
+            };
+
+            process.env = {
+                SOURCE_BUCKETS : "validBucket, validBucket2",
+                AUTO_WEBP: true
+            };
+
+            const event = {
+                path: `/${Buffer.from(JSON.stringify(input)).toString('base64')}`,
+                headers: {
+                    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3"
+                }
+            };
+            // Act
+            const imageRequest = new ImageRequest();
+            var result = imageRequest.getOutputFormat(event, 'Default');
+            // Assert
+            assert.deepEqual(result, input.outputFormat);
+        });
+    });
+});

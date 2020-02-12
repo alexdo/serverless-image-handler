@@ -22,13 +22,26 @@ class ImageHandler {
      * @param {ImageRequest} request - An ImageRequest object.
      */
     async process(request) {
-        const originalImage = request.originalImage;
-        const edits = request.edits;
+        const { originalImage, quality, edits } = request;
+        let { outputFormat } = request;
+
         if (edits !== undefined) {
             const modifiedImage = await this.applyEdits(originalImage, edits);
-            if (request.outputFormat !== undefined) {
-                await modifiedImage.toFormat(request.outputFormat);
+            const outputOptions = {};
+
+            if (quality) {
+                outputOptions.quality = quality;
+
+                if (outputFormat === undefined) {
+                    const metadata = await modifiedImage.metadata();
+                    outputFormat = metadata.format;
+                }
             }
+
+            if (outputFormat !== undefined) {
+                await modifiedImage.toFormat(outputFormat, outputOptions);
+            }
+
             const bufferImage = await modifiedImage.toBuffer();
             return bufferImage.toString('base64');
         } else {
@@ -154,6 +167,20 @@ class ImageHandler {
                 })
             }
         }
+    }
+
+    async getOutputOptions(request) {
+        const outputOptions = {};
+
+        if (quality) {
+            outputOptions.quality = quality;
+
+            if (outputFormat === undefined) {
+                const metadata = await modifiedImage.metadata();
+                outputFormat = metadata.format;
+            }
+        }
+
     }
 }
 
