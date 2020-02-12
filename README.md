@@ -11,6 +11,9 @@ It includes:
 * Working Unit Tests for all the new features
 * Fixes for interoperability errors between those features
 * Fix for linux-only build in upstream
+* Configurable path prefix (eg. banana instead of image) to allow multiple image scalers between a single cloudfront distribution
+* Image quality control - allow forcing a specific scaling quality per-request
+* Force output format - allows forcing a specific output format
 
 ----
 
