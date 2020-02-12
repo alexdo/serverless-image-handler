@@ -31,6 +31,11 @@
             "Default" : "*",
             "Type" : "String"
         },
+        "RoutingPrefix" : {
+            "Description" : "You'll need this when deploying multiple serverless image handlers behind a single cloud front distribution.",
+            "Default" : "image",
+            "Type" : "String"
+        },
         "SourceBuckets" : {
             "Description" : "(Required) List the buckets (comma-separated) within your account that contain original image files. If you plan to use Thumbor or Custom image requests with this solution, the source bucket for those requests will be the first bucket listed in this field.",
             "Default" : "defaultBucket, bucketNo2, bucketNo3, ...",
@@ -139,7 +144,7 @@
                     "Origins": [{
                         "DomainName": { "Fn::Sub": "${ImageHandlerApi}.execute-api.${AWS::Region}.amazonaws.com" },
                         "Id": { "Ref": "ImageHandlerApi" },
-                        "OriginPath": "/image",
+                        "OriginPath": { "Fn::Sub": "/${RoutingPrefix}" },
                         "CustomOriginConfig": {
                             "HTTPSPort": 443,
                             "OriginProtocolPolicy": "https-only",
@@ -279,7 +284,7 @@
                             "Fn::Sub": "ServerlessImageHandler-${AWS::StackName}"
                         }
                     },
-                    "basePath": "/image",
+                    "basePath": { "Fn::Sub": "/${RoutingPrefix}" },
                     "schemes": [ "https" ],
                     "paths": {
                         "/{proxy+}": {
@@ -338,7 +343,7 @@
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
                 "RestApiId": { "Ref": "ImageHandlerApi" },
-                "StageName": "image",
+                "StageName": { "Ref": "RoutingPrefix" },
                 "StageDescription": {
                     "AccessLogSetting": {
                         "DestinationArn": {
@@ -776,7 +781,7 @@
                 "ServiceToken": { "Fn::GetAtt" : [ "CustomResourceFunction", "Arn" ]},
                 "Region": { "Ref" : "AWS::Region" },
                 "configItem" : {
-                    "apiEndpoint" : { "Fn::Sub": "${ImageHandlerApi}.execute-api.${AWS::Region}.amazonaws.com/image" }
+                    "apiEndpoint" : { "Fn::Sub": "https://${ImageHandlerApi}.execute-api.${AWS::Region}.amazonaws.com/${RoutingPrefix}" }
                 } ,
                 "destS3Bucket" : { "Ref" : "DemoBucket" },
                 "destS3key" : "demo-ui-config.js",
@@ -827,7 +832,7 @@
     "Outputs" : {
         "ApiEndpoint" : {
             "Description" : "Link to API endpoint for sending image requests to.",
-            "Value" : { "Fn::Sub": "${ImageHandlerApi}.execute-api.${AWS::Region}.amazonaws.com/image" }
+            "Value" : { "Fn::Sub": "https://${ImageHandlerApi}.execute-api.${AWS::Region}.amazonaws.com/${RoutingPrefix}" }
         },
         "ApiDistribution" : {
             "Condition" : "DeployImageHandlerDistributionCondition",
