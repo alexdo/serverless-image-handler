@@ -77,6 +77,14 @@ function getPreviewImage() {
         if (_smartCropIndex !== "") { _edits.smartCrop.faceIndex = Number(_smartCropIndex) }
         if (_smartCropPadding !== "") { _edits.smartCrop.padding = Number(_smartCropPadding) }
     }
+    if (_outputFormat !== "") {
+        _edits.toFormat = _outputFormat;
+    }
+
+    if (_quality !== "") {
+        _edits.quality = Number.parseInt(_quality, 10);
+    }
+
     if (Object.keys(_edits.resize).length === 0) { delete _edits.resize };
     // Gather the bucket and key names
     const bucketName = $(`#img-original`).first().attr(`data-bucket`);
@@ -87,14 +95,6 @@ function getPreviewImage() {
         key: keyName,
         edits: _edits
     };
-
-    if (_quality !== "") {
-        request.quality = Number.parseInt(_quality, 10);
-    }
-
-    if (_outputFormat !== "") {
-        request.toFormat = _outputFormat;
-    }
 
     if (Object.keys(request.edits).length === 0) { delete request.edits };
     console.log(request);

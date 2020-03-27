@@ -295,7 +295,9 @@ class ImageRequest {
      */
     getOutputFormat(event) {
         const autoWebP = process.env.AUTO_WEBP;
-        if (autoWebP && event.headers.Accept && event.headers.Accept.includes('image/webp')) {
+        const headers = event.headers || {};
+        const acceptHeader = headers.Accept || headers.accept;
+        if (autoWebP && typeof acceptHeader === 'string' && acceptHeader.includes('image/webp')) {
             return 'webp';
         } else if (this.requestType === 'Default') {
             const decoded = this.decodeRequest(event);

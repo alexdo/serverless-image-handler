@@ -22,23 +22,26 @@ class ImageHandler {
      * @param {ImageRequest} request - An ImageRequest object.
      */
     async process(request) {
-        const { originalImage, quality, edits } = request;
+        const { originalImage, edits } = request;
         let { outputFormat } = request;
-
         if (edits !== undefined) {
-            const modifiedImage = await this.applyEdits(originalImage, edits);
             const outputOptions = {};
 
-            if (quality) {
-                outputOptions.quality = quality;
+            if (edits.quality) {
+                outputOptions.quality = edits.quality;
+                delete edits.quality;
 
                 if (outputFormat === undefined) {
-                    const metadata = await modifiedImage.metadata();
+                    const metadata = await originalImage.metadata();
                     outputFormat = metadata.format;
                 }
             }
 
+            const modifiedImage = await this.applyEdits(originalImage, edits);
+
             if (outputFormat !== undefined) {
+                logger.log('format :' + outputFormat);
+                logger.log('output options', outputOptions);
                 modifiedImage.toFormat(outputFormat, outputOptions);
             }
 
