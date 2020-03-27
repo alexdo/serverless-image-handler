@@ -23,7 +23,7 @@ describe('setup()', function() {
             the ImageRequest object with the proper values`, async function() {
             // Arrange
             const event = {
-                path : '/eyJidWNrZXQiOiJ2YWxpZEJ1Y2tldCIsImtleSI6InZhbGlkS2V5IiwiZWRpdHMiOnsiZ3JheXNjYWxlIjp0cnVlfX0='
+                path : '/eyJidWNrZXQiOiJ2YWxpZEJ1Y2tldCIsImtleSI6InZhbGlkS2V5IiwiZWRpdHMiOnsiZ3JheXNjYWxlIjp0cnVlfSwib3V0cHV0Rm9ybWF0IjoianBlZyJ9'
             }
             process.env = {
                 SOURCE_BUCKETS : "validBucket, validBucket2"
@@ -34,7 +34,7 @@ describe('setup()', function() {
             const getObject = S3.prototype.getObject = sinon.stub();
             getObject.withArgs({Bucket: 'validBucket', Key: 'validKey'}).returns({
                 promise: () => { return {
-                  Body: Buffer.from('SampleImageContent\n')
+                    Body: Buffer.from('SampleImageContent\n')
                 }}
             })
             // Act
@@ -45,7 +45,10 @@ describe('setup()', function() {
                 bucket: 'validBucket',
                 key: 'validKey',
                 edits: { grayscale: true },
-                originalImage: Buffer.from('SampleImageContent\n')
+                outputFormat: 'jpeg',
+                originalImage: Buffer.from('SampleImageContent\n'),
+                CacheControl: 'max-age=31536000,public',
+                ContentType: 'image/jpeg'
             }
             // Assert
             assert.deepEqual(imageRequest, expectedResult);
@@ -67,9 +70,7 @@ describe('setup()', function() {
             const getObject = S3.prototype.getObject = sinon.stub();
             getObject.withArgs({Bucket: 'allowedBucket001', Key: 'test-image-001.jpg'}).returns({
                 promise: () => { return {
-                  Body: Buffer.from('SampleImageContent\n'),
-                  LastModified: 'i am not a date',
-                  Expires: 'i am also not a date',
+                    Body: Buffer.from('SampleImageContent\n')
                 }}
             })
             // Act
@@ -80,7 +81,9 @@ describe('setup()', function() {
                 bucket: 'allowedBucket001',
                 key: 'test-image-001.jpg',
                 edits: { grayscale: true },
-                originalImage: Buffer.from('SampleImageContent\n')
+                originalImage: Buffer.from('SampleImageContent\n'),
+                CacheControl: 'max-age=31536000,public',
+                ContentType: 'image'
             }
             // Assert
             assert.deepEqual(imageRequest, expectedResult);
@@ -104,9 +107,10 @@ describe('setup()', function() {
             const getObject = S3.prototype.getObject = sinon.stub();
             getObject.withArgs({Bucket: 'allowedBucket001', Key: 'custom-image.jpg'}).returns({
                 promise: () => { return {
-                  ContentType: 'image/jpeg',
-                  LastModified: 'Wed, 18 Dec 2019 10:35:22 GMT',
-                  Expires: '2050-01-01 01:00:00 +0100',
+                  CacheControl: 'max-age=300,public',
+                  ContentType: 'custom-type',
+                  Expires: 'Tue, 24 Dec 2019 13:46:28 GMT',
+                  LastModified: 'Sat, 19 Dec 2009 16:30:47 GMT',
                   Body: Buffer.from('SampleImageContent\n')
                 }}
             })
@@ -122,9 +126,10 @@ describe('setup()', function() {
                     rotate: 90
                 },
                 originalImage: Buffer.from('SampleImageContent\n'),
-                ContentType: 'image/jpeg',
-                LastModified: 'Wed, 18 Dec 2019 10:35:22 GMT',
-                Expires: 'Sat, 01 Jan 2050 00:00:00 GMT',
+                CacheControl: 'max-age=300,public',
+                ContentType: 'custom-type',
+                Expires: 'Tue, 24 Dec 2019 13:46:28 GMT',
+                LastModified: 'Sat, 19 Dec 2009 16:30:47 GMT',
             }
             // Assert
             assert.deepEqual(imageRequest, expectedResult);
@@ -142,7 +147,7 @@ describe('setup()', function() {
             const getObject = S3.prototype.getObject = sinon.stub();
             getObject.withArgs({Bucket: 'validBucket', Key: 'validKey'}).returns({
                 promise: () => { return {
-                  Body: Buffer.from('SampleImageContent\n')
+                    Body: Buffer.from('SampleImageContent\n')
                 }}
             })
             // Act
@@ -170,7 +175,7 @@ describe('getOriginalImage()', function() {
             const getObject = S3.prototype.getObject = sinon.stub();
             getObject.withArgs({Bucket: 'validBucket', Key: 'validKey'}).returns({
                 promise: () => { return {
-                  Body: Buffer.from('SampleImageContent\n')
+                    Body: Buffer.from('SampleImageContent\n')
                 }}
             })
             // Act
@@ -191,7 +196,7 @@ describe('getOriginalImage()', function() {
                 promise: () => {
                     return Promise.reject({
                         code: 'NoSuchKey',
-                        message: 'SimulatedInvalidParameterException'
+                        message: 'SimulatedException'
                     })
                 }
             });
@@ -200,14 +205,12 @@ describe('getOriginalImage()', function() {
             // Assert
             imageRequest.getOriginalImage('invalidBucket', 'invalidKey').then((result) => {
                 assert.equal(typeof result, Error);
-                assert.equal(result.code, 404);
-            }).catch((err) => {
-                console.log(err)
-            })
+                assert.equal(result.status, 404);
+            }).catch((err) => console.log(err));
         });
     });
-    describe('003/differentUpstreamError', async function() {
-        it(`Should throw an error if there is another exception in s3 communication than a 404`, async function() {
+    describe('003/unknownError', async function() {
+        it(`Should throw an error if an unkown problem happens when getting an object`, async function() {
             // Arrange
             const S3 = require('aws-sdk/clients/s3');
             const sinon = require('sinon');
@@ -215,8 +218,8 @@ describe('getOriginalImage()', function() {
             getObject.withArgs({Bucket: 'invalidBucket', Key: 'invalidKey'}).returns({
                 promise: () => {
                     return Promise.reject({
-                        code: 'SomeeOtherException',
-                        message: 'SimulatedInvalidParameterException'
+                        code: 'InternalServerError',
+                        message: 'SimulatedException'
                     })
                 }
             });
@@ -225,10 +228,8 @@ describe('getOriginalImage()', function() {
             // Assert
             imageRequest.getOriginalImage('invalidBucket', 'invalidKey').then((result) => {
                 assert.equal(typeof result, Error);
-                assert.equal(result.code, 500);
-            }).catch((err) => {
-                console.log(err)
-            })
+                assert.equal(result.status, 500);
+            }).catch((err) => console.log(err));
         });
     });
 });
@@ -699,7 +700,7 @@ describe('getOutputFormat()', function () {
             const imageRequest = new ImageRequest();
             var result = imageRequest.getOutputFormat(event);
             // Assert
-            assert.deepEqual(result, "webp");
+            assert.deepEqual(result, 'webp');
         });
     });
     describe('002/AcceptsHeaderDoesNotIncludeWebP', function () {
@@ -753,41 +754,4 @@ describe('getOutputFormat()', function () {
             assert.deepEqual(result, null);
         });
     });
-    describe('005/webpImageRequest', function() {
-        it(`Should pass when a default image request is provided and populate
-            the ImageRequest object with the proper output format`, async function() {
-            // Arrange
-            const event = {
-                path : '/eyJidWNrZXQiOiJ2YWxpZEJ1Y2tldCIsImtleSI6InZhbGlkS2V5IiwiZWRpdHMiOnsiZ3JheXNjYWxlIjp0cnVlfX0=',
-                headers: {
-                    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3"
-                }
-            }
-            process.env = {
-                SOURCE_BUCKETS : "validBucket, validBucket2",
-                AUTO_WEBP: true
-            }
-            // ----
-            const S3 = require('aws-sdk/clients/s3');
-            const sinon = require('sinon');
-            const getObject = S3.prototype.getObject = sinon.stub();
-            getObject.withArgs({Bucket: 'validBucket', Key: 'validKey'}).returns({
-                promise: () => { return {
-                    Body: Buffer.from('SampleImageContent\n'),
-                }}
-            })
-            // Act
-            const imageRequest = new ImageRequest();
-            await imageRequest.setup(event);
-            const expectedResult = {
-                requestType: 'Default',
-                bucket: 'validBucket',
-                key: 'validKey',
-                edits: { grayscale: true },
-                originalImage: Buffer.from('SampleImageContent\n'),
-                outputFormat: 'webp'
-            }
-            // Assert
-            assert.deepEqual(imageRequest, expectedResult);
-        });
-    });});
+});

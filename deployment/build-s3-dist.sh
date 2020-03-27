@@ -23,6 +23,13 @@ if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
     exit 1
 fi
 
+if ! $(echo 'process.version.startsWith("v12") ? process.exit() : process.exit(1)' |  node -) ; then
+    echo "Please make sure you're compiling this package with node version 12."
+    echo "Current version:"
+    node --version
+    exit 1
+fi
+
 set -e
 
 # Get reference for all important folders

@@ -39,6 +39,7 @@ function getPreviewImage() {
     const _grayscale = $(`#editor-grayscale`).first().prop("checked");
     const _flip = $(`#editor-flip`).first().prop("checked");
     const _flop = $(`#editor-flop`).first().prop("checked");
+    const _sharpen = $(`#editor-sharpen`).first().prop("checked");
     const _negative = $(`#editor-negative`).first().prop("checked");
     const _flatten = $(`#editor-flatten`).first().prop("checked");
     const _normalize = $(`#editor-normalize`).first().prop("checked");
@@ -46,6 +47,8 @@ function getPreviewImage() {
     const _smartCrop = $(`#editor-smart-crop`).first().prop("checked");
     const _smartCropIndex = $(`#editor-smart-crop-index`).first().val();
     const _smartCropPadding = $(`#editor-smart-crop-padding`).first().val();
+    const _quality = $(`#editor-quality`).first().val();
+    const _outputFormat = $(`#editor-output-format`).first().val();
     // Setup the edits object
     const _edits = {}
     _edits.resize = {};
@@ -59,6 +62,7 @@ function getPreviewImage() {
     if (_grayscale) { _edits.grayscale = _grayscale }
     if (_flip) { _edits.flip = _flip }
     if (_flop) { _edits.flop = _flop }
+    if (_sharpen) { _edits.sharpen = _sharpen }
     if (_negative) { _edits.negate = _negative }
     if (_flatten) { _edits.flatten = _flatten }
     if (_normalize) { _edits.normalise = _normalize }
@@ -73,6 +77,14 @@ function getPreviewImage() {
         if (_smartCropIndex !== "") { _edits.smartCrop.faceIndex = Number(_smartCropIndex) }
         if (_smartCropPadding !== "") { _edits.smartCrop.padding = Number(_smartCropPadding) }
     }
+    if (_outputFormat !== "") {
+        _edits.toFormat = _outputFormat;
+    }
+
+    if (_quality !== "") {
+        _edits.quality = Number.parseInt(_quality, 10);
+    }
+
     if (Object.keys(_edits.resize).length === 0) { delete _edits.resize };
     // Gather the bucket and key names
     const bucketName = $(`#img-original`).first().attr(`data-bucket`);
@@ -82,7 +94,8 @@ function getPreviewImage() {
         bucket: bucketName,
         key: keyName,
         edits: _edits
-    }
+    };
+
     if (Object.keys(request.edits).length === 0) { delete request.edits };
     console.log(request);
     // Setup encoded request

@@ -13,37 +13,40 @@
 
 const ImageRequest = require('./image-request.js');
 const ImageHandler = require('./image-handler.js');
+const logger = require('./logger');
 
 exports.handler = async (event) => {
-    console.log(event);
+    logger.log(event);
+
     const imageRequest = new ImageRequest();
     const imageHandler = new ImageHandler();
     try {
         const request = await imageRequest.setup(event);
-        console.log(request);
+        logger.log(request);
         const processedRequest = await imageHandler.process(request);
+
         const headers = getResponseHeaders();
-        headers["Content-Type"] = request.outputFormat === 'webp' ? 'image/webp' : request.ContentType;
+        headers["Content-Type"] = request.ContentType;
         headers["Expires"] = request.Expires;
         headers["Last-Modified"] = request.LastModified;
-        const response = {
+        headers["Cache-Control"] = request.CacheControl;
+
+        return {
             "statusCode": 200,
             "headers" : headers,
             "body": processedRequest,
             "isBase64Encoded": true
-        }
-        return response;
+        };
     } catch (err) {
         console.log(err);
-        const response = {
+
+        return {
             "statusCode": err.status,
             "headers" : getResponseHeaders(true),
             "body": JSON.stringify(err),
             "isBase64Encoded": false
-        }
-        return response;
-    }
-}
+        };
+    }};
 
 /**
  * Generates the appropriate set of response headers based on a success
@@ -55,14 +58,16 @@ const getResponseHeaders = (isErr) => {
     const headers = {
         "Access-Control-Allow-Methods": "GET",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        "Access-Control-Allow-Credentials": true,
-        "Cache-Control": "max-age=31536000,public"
-    }
+        "Access-Control-Allow-Credentials": true
+    };
+
     if (corsEnabled) {
         headers["Access-Control-Allow-Origin"] = process.env.CORS_ORIGIN;
     }
+
     if (isErr) {
         headers["Content-Type"] = "application/json"
     }
+
     return headers;
-}
+};

@@ -6,10 +6,16 @@ It includes:
 * Automatic WebP delivery in case the Browser supports it ([source](https://github.com/awslabs/serverless-image-handler/pull/152))
 * Fixed Deprecation Warning ([source](https://github.com/awslabs/serverless-image-handler/pull/174))
 * S3 Header Forwarding ([source](https://github.com/awslabs/serverless-image-handler/pull/158))
+* Configurable log verbosity
+* Allow skipping of CloudFront Distribution creation via parameter
 * Working Unit Tests for all the new features
 * Fixes for interoperability errors between those features
 * Fix for linux-only build in upstream
+* Configurable path prefix (eg. banana instead of image) to allow multiple image scalers between a single cloudfront distribution
+* Image quality control - allow forcing a specific scaling quality per-request
+* Force output format - allows forcing a specific output format
 
+----
 **_Important Notice:_**
 Due to a [change in the AWS Lambda execution environment](https://aws.amazon.com/blogs/compute/upcoming-updates-to-the-aws-lambda-execution-environment/), Serverless Image Handler v3 deployments are functionally broken. To address the issue we have released [minor version update v3.1.1](https://solutions-reference.s3.amazonaws.com/serverless-image-handler/v3.1.1/serverless-image-handler.template). We recommend all users of v3 to run cloudformation stack update with v3.1.1. Additionally, we suggest you to look at v4 of the solution and migrate to v4 if it addresses all of your use cases.
 
@@ -34,7 +40,8 @@ chmod +x ./run-unit-tests.sh
 
 * Create an Amazon S3 Bucket
 ```
-aws s3 mb s3://my-bucket --region eu-central-1
+aws s3 mb s3://my-bucket-us-east-1 --region us-east-1
+```
 
 * Navigate to the deployment folder and build the distributable
 ```bash
@@ -44,13 +51,9 @@ chmod +x ./build-s3-dist.sh
 
 > Note: The build-s3-dist script expects the bucket name as one of its parameters, and this value should not include the region suffix.
 
-**IMPORTANT:** You need to build this on a system with THE SAME NODE VERSION AS LAMBDA (= Node 12 LTS)!
-It's mandatory that the compiled node modules are compatible with your lambda execution environment! (= same node version; different os family is accounted for)   
-Lambda runs on Linux 64bit. This template is currently configured to use Node 12.x.
-
 * Deploy the distributable to an Amazon S3 bucket in your account (you must have the AWS CLI installed)
 ```bash
-aws s3 cp ./regional-s3-assets/ s3://my-bucket/serverless-image-handler/my-version/ --recursive --acl bucket-owner-full-control
+aws s3 cp ./regional-s3-assets/ s3://my-bucket-us-east-1/serverless-image-handler/my-version/ --recursive --acl bucket-owner-full-control
 ```
 
 * Get the link of the serverless-image-handler.template uploaded to your Amazon S3 bucket
