@@ -93,7 +93,7 @@ function getPreviewImage() {
     }
 
     if (_outputFormat !== "") {
-        request.outputFormat = _outputFormat;
+        request.toFormat = _outputFormat;
     }
 
     if (Object.keys(request.edits).length === 0) { delete request.edits };

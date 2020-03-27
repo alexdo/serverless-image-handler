@@ -24,28 +24,29 @@ exports.handler = async (event) => {
         const request = await imageRequest.setup(event);
         logger.log(request);
         const processedRequest = await imageHandler.process(request);
+
         const headers = getResponseHeaders();
-        headers["Content-Type"] = request.outputFormat === 'webp' ? 'image/webp' : request.ContentType;
+        headers["Content-Type"] = request.ContentType;
         headers["Expires"] = request.Expires;
         headers["Last-Modified"] = request.LastModified;
-        const response = {
+        headers["Cache-Control"] = request.CacheControl;
+
+        return {
             "statusCode": 200,
             "headers" : headers,
             "body": processedRequest,
             "isBase64Encoded": true
         };
-        return response;
     } catch (err) {
-        logger.error(err);
-        const response = {
+        console.log(err);
+
+        return {
             "statusCode": err.status,
             "headers" : getResponseHeaders(true),
             "body": JSON.stringify(err),
             "isBase64Encoded": false
         };
-        return response;
-    }
-};
+    }};
 
 /**
  * Generates the appropriate set of response headers based on a success
@@ -57,8 +58,7 @@ const getResponseHeaders = (isErr) => {
     const headers = {
         "Access-Control-Allow-Methods": "GET",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        "Access-Control-Allow-Credentials": true,
-        "Cache-Control": "max-age=31536000,public"
+        "Access-Control-Allow-Credentials": true
     };
 
     if (corsEnabled) {
@@ -68,5 +68,6 @@ const getResponseHeaders = (isErr) => {
     if (isErr) {
         headers["Content-Type"] = "application/json"
     }
+
     return headers;
 };

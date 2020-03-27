@@ -102,6 +102,7 @@
     "Resources": {
         "Logs": {
             "DeletionPolicy": "Retain",
+            "UpdateReplacePolicy": "Retain",
             "Type": "AWS::S3::Bucket",
             "Properties": {
                 "AccessControl": "LogDeliveryWrite",
@@ -341,6 +342,7 @@
         },
         "ImageHandlerApiDeployment": {
             "Type": "AWS::ApiGateway::Deployment",
+            "DependsOn": "ApiAccountConfig",
             "Properties": {
                 "RestApiId": { "Ref": "ImageHandlerApi" },
                 "StageName": { "Ref": "RoutingPrefix" },
@@ -541,6 +543,7 @@
             "Type": "AWS::S3::Bucket",
             "Condition": "DeployDemoUICondition",
             "DeletionPolicy": "Retain",
+            "UpdateReplacePolicy": "Retain",
             "Properties": {
                 "BucketEncryption": {
                     "ServerSideEncryptionConfiguration": [
