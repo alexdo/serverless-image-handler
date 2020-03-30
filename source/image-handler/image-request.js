@@ -12,6 +12,7 @@
  *********************************************************************************************************************/
 
 const ThumborMapping = require('./thumbor-mapping');
+const logger = require('./logger');
 
 class ImageRequest {
 
@@ -22,11 +23,25 @@ class ImageRequest {
      */
     async setup(event) {
         try {
+            this.sizeOverride = this.parseSizeOverride(event);
             this.requestType = this.parseRequestType(event);
             this.bucket = this.parseImageBucket(event, this.requestType);
             this.key = this.parseImageKey(event, this.requestType);
             this.edits = this.parseImageEdits(event, this.requestType);
             this.originalImage = await this.getOriginalImage(this.bucket, this.key);
+
+            if (this.sizeOverride) {
+                // override size params given in base64 content with
+                // sizes given explicitly in plaintext via URL
+                // Allows for urls like: https://api.com/image/120x120/eyJidWNrZXQiOiJmYX...
+                this.edits = {
+                    ...this.edits,
+                    resize: {
+                        ...(this.edits.resize || {}),
+                        ...this.sizeOverride,
+                    },
+                };
+            }
 
             /* Decide the output format of the image.
              * 1) If the format is provided, the output format is the provided format.
@@ -237,6 +252,27 @@ class ImageRequest {
                 message: 'The type of request you are making could not be processed. Please ensure that your original image is of a supported file type (jpg, png, tiff, webp) and that your image request is provided in the correct syntax. Refer to the documentation for additional guidance on forming image requests.'
             };
         }
+    }
+
+    /**
+     * checks whether there's a plaintext size given in the url and extracts
+     * corresponding width & height parameters when present.
+     *
+     * Allows for urls like:
+     * https://api.com/image/120x120/eyJidWNrZXQiOiJmYX...
+     *
+     * @param event
+     * @returns {{width: number, height: number}|null}
+     */
+    parseSizeOverride(event) {
+        const path = event.path;
+
+        const matches = path.match(/^\/?(\d+)x(\d+)(\/.+)/);
+        if (matches !== null) {
+            return { width: parseInt(matches[1], 10), height: parseInt(matches[2], 10) };
+        }
+
+        return null;
     }
 
     /**

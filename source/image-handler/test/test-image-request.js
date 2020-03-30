@@ -48,7 +48,8 @@ describe('setup()', function() {
                 outputFormat: 'jpeg',
                 originalImage: Buffer.from('SampleImageContent\n'),
                 CacheControl: 'max-age=31536000,public',
-                ContentType: 'image/jpeg'
+                ContentType: 'image/jpeg',
+                sizeOverride: null,
             }
             // Assert
             assert.deepEqual(imageRequest, expectedResult);
@@ -83,7 +84,8 @@ describe('setup()', function() {
                 edits: { grayscale: true },
                 originalImage: Buffer.from('SampleImageContent\n'),
                 CacheControl: 'max-age=31536000,public',
-                ContentType: 'image'
+                ContentType: 'image',
+                sizeOverride: null,
             }
             // Assert
             assert.deepEqual(imageRequest, expectedResult);
@@ -130,6 +132,7 @@ describe('setup()', function() {
                 ContentType: 'custom-type',
                 Expires: 'Tue, 24 Dec 2019 13:46:28 GMT',
                 LastModified: 'Sat, 19 Dec 2009 16:30:47 GMT',
+                sizeOverride: null,
             }
             // Assert
             assert.deepEqual(imageRequest, expectedResult);

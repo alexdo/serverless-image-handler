@@ -2,18 +2,11 @@
 
 This is a fork of [awslabs/serverless-image-handler](https://github.com/awslabs/serverless-image-handler).
 
-It includes:
-* Automatic WebP delivery in case the Browser supports it ([source](https://github.com/awslabs/serverless-image-handler/pull/152))
-* Fixed Deprecation Warning ([source](https://github.com/awslabs/serverless-image-handler/pull/174))
-* S3 Header Forwarding ([source](https://github.com/awslabs/serverless-image-handler/pull/158))
+It includes (compared to the origin repo):
 * Configurable log verbosity
 * Allow skipping of CloudFront Distribution creation via parameter
-* Working Unit Tests for all the new features
-* Fixes for interoperability errors between those features
-* Fix for linux-only build in upstream
 * Configurable path prefix (eg. banana instead of image) to allow multiple image scalers between a single cloudfront distribution
-* Image quality control - allow forcing a specific scaling quality per-request
-* Force output format - allows forcing a specific output format
+* Allow width & height in URLs (overrides the base64 values)
 
 ----
 **_Important Notice:_**
