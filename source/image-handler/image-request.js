@@ -37,7 +37,7 @@ class ImageRequest {
                 this.edits = {
                     ...this.edits,
                     resize: {
-                        ...(this.edits.resize || {}),
+                        ...((this.edits || {}).resize || {}),
                         ...this.sizeOverride,
                     },
                 };

@@ -9,6 +9,7 @@
 **/out-tsc
 # solution-specific compile
 **/build-all.sh
+**/Dockerfile
 
 # dependencies
 **/node_modules
