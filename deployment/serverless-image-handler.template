@@ -453,7 +453,7 @@
                 "Path": "/",
                 "RoleName": {
                     "Fn::Join": [
-                        "", [ { "Ref": "AWS::StackName" }, "ImageHandlerFunctionRole", "-", {"Ref": "AWS::Region"} ] ]
+                        "", [ { "Ref": "AWS::StackName" }, "ImgHandlerFuncRole", "-", {"Ref": "AWS::Region"} ] ]
                 }
             },
             "Metadata": {
@@ -726,7 +726,7 @@
                 "Path": "/",
                 "RoleName": {
                     "Fn::Join": [
-                        "", [ { "Ref": "AWS::StackName" }, "CustomResourceRole", "-", {"Ref": "AWS::Region"} ] ]
+                        "", [ { "Ref": "AWS::StackName" }, "CustomResRole", "-", {"Ref": "AWS::Region"} ] ]
                 }
             },
             "Metadata": {
