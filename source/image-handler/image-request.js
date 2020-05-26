@@ -269,6 +269,7 @@ class ImageRequest {
 
         const matches = path.match(/^\/?(\d+)x(\d+)(\/.+)/);
         if (matches !== null) {
+            event.path = path.replace(/^\/?(\d+)x(\d+)/, '')
             return { width: parseInt(matches[1], 10), height: parseInt(matches[2], 10) };
         }
 
