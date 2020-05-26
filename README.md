@@ -7,6 +7,8 @@ It includes (compared to the origin repo):
 * Allow skipping of CloudFront Distribution creation via parameter
 * Configurable path prefix (eg. banana instead of image) to allow multiple image scalers between a single cloudfront distribution
 * Allow width & height in URLs (overrides the base64 values)
+* Defining a maximum scaling size
+* Defining allowed scaling dimensions
 
 ----
 **_Important Notice:_**
