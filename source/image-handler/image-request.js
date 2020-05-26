@@ -25,10 +25,7 @@ class ImageRequest {
         try {
             this.sizeOverride = this.parseSizeOverride(event);
             this.requestType = this.parseRequestType(event);
-            this.bucket = this.parseImageBucket(event, this.requestType);
-            this.key = this.parseImageKey(event, this.requestType);
             this.edits = this.parseImageEdits(event, this.requestType);
-            this.originalImage = await this.getOriginalImage(this.bucket, this.key);
 
             if (this.sizeOverride) {
                 // override size params given in base64 content with
@@ -42,6 +39,12 @@ class ImageRequest {
                     },
                 };
             }
+
+            this.validateTargetSize(this.edits);
+
+            this.bucket = this.parseImageBucket(event, this.requestType);
+            this.key = this.parseImageKey(event, this.requestType);
+            this.originalImage = await this.getOriginalImage(this.bucket, this.key);
 
             /* Decide the output format of the image.
              * 1) If the format is provided, the output format is the provided format.
@@ -342,6 +345,51 @@ class ImageRequest {
         }
 
         return null;
+    }
+
+    validateTargetSize(edits) {
+        if (!edits.resize || !edits.resize.width || !edits.resize.height) {
+            return;
+        }
+
+        const { width: targetWidth, height: targetHeight } = edits.resize;
+
+        const maxDimensionString = process.env.MAX_DIMENSION || '';
+        const maxDimensions = maxDimensionString.trim().split('x').map(Number);
+        if (maxDimensions.length === 2) {
+            const [maxWidth, maxHeight] = maxDimensions;
+            if (maxWidth > 0 && targetWidth > maxWidth) {
+                throw ({
+                    status: 400,
+                    code: 'ValidateTargetSize::MaximumWidthExceeded',
+                    message: 'Images can be at max ' + maxWidth + 'px wide. Width of ' + targetWidth + ' requested',
+                });
+            }
+            if (maxHeight > 0 && targetHeight > maxHeight) {
+                throw ({
+                    status: 400,
+                    code: 'ValidateTargetSize::MaximumHeightExceeded',
+                    message: 'Images can be at max ' + maxHeight + 'px high. Height of ' + targetHeight + ' requested',
+                });
+            }
+        }
+
+        const allowedDimensionsString = process.env.ALLOWED_DIMENSIONS || '';
+        const allowedDimensions = allowedDimensionsString
+            .split(',')
+            .map(str => str.trim())
+            .filter(str => str.match(/^\d+x\d+$/));
+
+        if (allowedDimensions.length > 0) {
+            const targetDimension = `${targetWidth}x${targetHeight}`;
+            if (!allowedDimensions.includes(targetDimension)) {
+                throw ({
+                    status: 400,
+                    code: 'ValidateTargetSize::InvalidDimension',
+                    message: 'Requested invalid image size ' + targetDimension + '. Allowed Dimensions are ' + allowedDimensionsString,
+                });
+            }
+        }
     }
 }
 

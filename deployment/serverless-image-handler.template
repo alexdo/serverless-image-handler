@@ -36,6 +36,16 @@
             "Default" : "image",
             "Type" : "String"
         },
+        "MaxDimensions" : {
+            "Description" : "Maximum resolution in the format of 100x200 (X x Y) to be allowed for scaling",
+            "Default" : "",
+            "Type" : "String"
+        },
+        "AllowedDimensions" : {
+            "Description" : "Comma separated list of allowed resolutions in the format of 100x200 (X x Y) (f.e. 90x90,100x100,200x200)",
+            "Default" : "",
+            "Type" : "String"
+        },
         "SourceBuckets" : {
             "Description" : "(Required) List the buckets (comma-separated) within your account that contain original image files. If you plan to use Thumbor or Custom image requests with this solution, the source bucket for those requests will be the first bucket listed in this field.",
             "Default" : "defaultBucket, bucketNo2, bucketNo3, ...",
@@ -59,8 +69,8 @@
         "AWS::CloudFormation::Interface": {
             "ParameterGroups": [
                 {
-                    "Label": { "default": "CORS Options" },
-                    "Parameters": [ "CorsEnabled", "CorsOrigin" ]
+                    "Label": { "default": "Ingress" },
+                    "Parameters": [ "RoutingPrefix", "DeployImageHandlerDistribution" ]
                 },
                 {
                     "Label": { "default": "Image Sources" },
@@ -68,15 +78,19 @@
                 },
                 {
                     "Label": { "default": "Optimization" },
-                    "Parameters": [ "AutoWebP" ]
+                    "Parameters": [ "AutoWebP", "MaxDimensions", "AllowedDimensions" ]
                 },
                 {
                     "Label": { "default": "Demo UI" },
                     "Parameters": [ "DeployDemoUI" ]
                 },
                 {
+                    "Label": { "default": "CORS Options" },
+                    "Parameters": [ "CorsEnabled", "CorsOrigin" ]
+                },
+                {
                     "Label": { "default": "Event Logging" },
-                    "Parameters": [ "LogRetentionPeriod" ]
+                    "Parameters": [ "LogLevel", "LogRetentionPeriod" ]
                 }
             ]
         }
@@ -408,6 +422,12 @@
                         },
                         "SOURCE_BUCKETS" : {
                             "Ref" : "SourceBuckets"
+                        },
+                        "MAX_DIMENSION" : {
+                            "Ref" : "MaxDimensions"
+                        },
+                        "ALLOWED_DIMENSIONS" : {
+                            "Ref" : "AllowedDimensions"
                         },
                         "REWRITE_MATCH_PATTERN" : "",
                         "REWRITE_SUBSTITUTION" : ""
@@ -854,6 +874,18 @@
         "CorsEnabled" : {
             "Description" : "Indicates whether Cross-Origin Resource Sharing (CORS) has been enabled for the image handler API.",
             "Value" : { "Ref" : "CorsEnabled" }
+        },
+        "AutoWebPEnabled" : {
+            "Description" : "Indicates whether automatic WebP transformation has been enabled for the image handler API.",
+            "Value" : { "Ref" : "AutoWebP" }
+        },
+        "MaximumDimensions" : {
+            "Description" : "Maximum dimension allowed for image scaling",
+            "Value" : { "Ref" : "MaxDimensions" }
+        },
+        "AllowedDimensions" : {
+            "Description" : "Allowed dimensions for image scaling",
+            "Value" : { "Ref" : "AllowedDimensions" }
         },
         "CorsOrigin" : {
             "Condition" : "EnableCorsCondition",
