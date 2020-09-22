@@ -348,7 +348,7 @@ class ImageRequest {
     }
 
     validateTargetSize(edits) {
-        if (!edits.resize || !edits.resize.width || !edits.resize.height) {
+        if (!edits || !edits.resize || !edits.resize.width || !edits.resize.height) {
             return;
         }
 
