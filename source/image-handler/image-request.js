@@ -337,9 +337,22 @@ class ImageRequest {
         const autoWebP = process.env.AUTO_WEBP;
         const headers = event.headers || {};
         const acceptHeader = headers.Accept || headers.accept;
-        if (autoWebP && typeof acceptHeader === 'string' && acceptHeader.includes('image/webp')) {
-            return 'webp';
-        } else if (this.requestType === 'Default') {
+        const userAgentHeader = headers['User-Agent'] || headers['user-agent'];
+
+        if (autoWebP) {
+            const acceptsWebP = typeof acceptHeader === 'string' && acceptHeader.includes('image/webp');
+
+            const userAgentExcludePattern = process.env.AUTO_WEBP_EXCLUDE_USER_AGENT_PATTERN || '';
+            const userAgentIsExcluded = typeof userAgentHeader === 'string'
+                && userAgentExcludePattern.length > 0
+                && userAgentHeader.match(new RegExp(userAgentExcludePattern, 'i')) !== null;
+
+            if (acceptsWebP && !userAgentIsExcluded) {
+                return 'webp';
+            }
+        }
+
+        if (this.requestType === 'Default') {
             const decoded = this.decodeRequest(event);
             return decoded.outputFormat;
         }
