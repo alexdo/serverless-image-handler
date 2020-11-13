@@ -8,11 +8,6 @@
             "Type" : "String",
             "AllowedValues" : [ "Yes", "No" ]
         },
-        "AutoWebPExcludeUserAgent" : {
-            "Description" : "Which User-Agents should not receive webp images by default? Use a JS-compatible regex here, e.g. 'alamofire'",
-            "Default" : "",
-            "Type" : "String"
-        },
         "LogLevel" : {
             "Description" : "Lambda function log level",
             "Default" : "error",
@@ -83,7 +78,7 @@
                 },
                 {
                     "Label": { "default": "Optimization" },
-                    "Parameters": [ "AutoWebP", "AutoWebPExcludeUserAgent", "MaxDimensions", "AllowedDimensions" ]
+                    "Parameters": [ "AutoWebP", "MaxDimensions", "AllowedDimensions" ]
                 },
                 {
                     "Label": { "default": "Demo UI" },
@@ -179,7 +174,7 @@
                         "TargetOriginId": { "Fn::Sub": "${ImageHandlerApi}" },
                         "ForwardedValues": {
                             "QueryString": false,
-                            "Headers": [ "Origin", "Accept", "User-Agent" ],
+                            "Headers": [ "Origin", "Accept" ],
                             "Cookies": { "Forward": "none" }
                         },
                         "ViewerProtocolPolicy": "https-only"
@@ -415,9 +410,6 @@
                     "Variables" : {
                         "AUTO_WEBP" : {
                             "Ref" : "AutoWebP"
-                        },
-                        "AUTO_WEBP_EXCLUDE_USER_AGENT_PATTERN" : {
-                            "Ref" : "AutoWebPExcludeUserAgent"
                         },
                         "LOG_LEVEL" : {
                             "Ref" : "LogLevel"
@@ -886,10 +878,6 @@
         "AutoWebPEnabled" : {
             "Description" : "Indicates whether automatic WebP transformation has been enabled for the image handler API.",
             "Value" : { "Ref" : "AutoWebP" }
-        },
-        "AutoWebPExcludeUserAgentRegex" : {
-            "Description" : "User-Agent regex that deactivates automatic webp transformation. Useful as compatibility-layer against webp-incompatible clients.",
-            "Value" : { "Ref" : "AutoWebPExcludeUserAgent" }
         },
         "MaximumDimensions" : {
             "Description" : "Maximum dimension allowed for image scaling",
