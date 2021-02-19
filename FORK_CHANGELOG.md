@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2020-11-13
+### Changed
+- `toFormat` to `outputFormat` parameter to be consistent with sharp API. `toFormat` will still be supported until 2.0.
+
+### Added
+- when using the default request scheme (base64), outputOptions can now be passed to sharp.
+  Example unencoded:
+  ```json
+    {
+    "bucket": "my-bucket",
+    "key": "my-image.jpg",
+    "edits": {
+      "resize": {
+        "width": 300,
+        "height": 300,
+        "fit": "inside"
+      }
+    },
+    "outputFormat": "webp",
+    "outputOptions": {
+      "nearLossless": true,
+      "quality": 90
+    }
+  }
+  ```
+
 ## [1.5.1] - 2020-11-13
 ### Fixed
 - AUTO_WEBP toggle

@@ -23,10 +23,8 @@ class ImageHandler {
      */
     async process(request) {
         const { originalImage, edits } = request;
-        let { outputFormat } = request;
+        let { outputFormat, outputOptions } = request;
         if (edits !== undefined) {
-            const outputOptions = {};
-
             if (edits.quality) {
                 outputOptions.quality = edits.quality;
                 delete edits.quality;

@@ -26,6 +26,7 @@ class ImageRequest {
             this.sizeOverride = this.parseSizeOverride(event);
             this.requestType = this.parseRequestType(event);
             this.edits = this.parseImageEdits(event, this.requestType);
+            this.outputOptions = this.parseOutputOptions(event, this.requestType);
 
             if (this.sizeOverride) {
                 // override size params given in base64 content with
@@ -52,7 +53,9 @@ class ImageRequest {
              * 3) Use the default image format for the rest of cases.
              */
             let outputFormat = this.getOutputFormat(event);
-            if (this.edits && this.edits.toFormat) {
+            if (this.edits && this.edits.outputFormat) {
+                this.outputFormat = this.edits.outputFormat;
+            } else if (this.edits && this.edits.toFormat) {
                 this.outputFormat = this.edits.toFormat;
             } else if (outputFormat) {
                 this.outputFormat = outputFormat;
@@ -390,6 +393,17 @@ class ImageRequest {
                 });
             }
         }
+    }
+
+    parseOutputOptions(event, requestType) {
+        if (requestType !== "Default") {
+            return {};
+        }
+
+        const decoded = this.decodeRequest(event);
+        return {
+            ...(decoded.outputOptions || {})
+        };
     }
 }
 
