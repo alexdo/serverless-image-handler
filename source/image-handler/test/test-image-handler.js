@@ -474,3 +474,180 @@ describe('getBoundingBox()', function() {
         });
     });
 });
+
+// ----------------------------------------------------------------------------
+// [async] generateGradient()
+// ----------------------------------------------------------------------------
+describe('generateGradient()', function() {
+    describe('001/validParameters', function() {
+        it(`Should pass if the proper parameters are passed to the function`,
+            function() {
+
+            const edits = {
+                overlayWithGradient: {
+                    top: '20%',
+                    left: '55p',
+                    radius: '120',
+                    stops: [],
+                }
+            }
+
+            const metadata = {
+                width: 100,
+                height: 200,
+            };
+
+            const sinon = require('sinon');
+            const imageHandler = new ImageHandler();
+            imageHandler.buildStops = sinon.stub().returns('');
+
+            assert.deepEqual(
+                imageHandler.generateGradient(edits, metadata),
+                '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="200">' +
+                    '<defs>' +
+                        '<radialGradient id="rgrad" cx="55%" cy="20%" r="120" gradientUnits="userSpaceOnUse">' +
+                        '</radialGradient>' +
+                    '</defs>' +
+                    '<rect x="0" y="0" width="100" height="200" fill="url(#rgrad)" />' +
+                '</svg>'
+            );
+
+            assert(imageHandler.buildStops.calledWith(edits.overlayWithGradient.stops));
+        });
+    });
+    describe('002/errorHandling', function() {
+        const sinon = require('sinon');
+        let edits, metadata;
+        let imageHandler;
+
+        beforeEach(() => {
+            edits = {
+                overlayWithGradient: {
+                    top: '20%',
+                    left: '55p',
+                    radius: '120',
+                    stops: [],
+                }
+            }
+
+            metadata = {
+                width: 100,
+                height: 200,
+            };
+
+            imageHandler = new ImageHandler();
+            imageHandler.buildStops = sinon.stub().returns('');
+        });
+
+        it(`Should throw an error for invalid values`,
+            async function() {
+            edits.overlayWithGradient.top = 'foo';
+            edits.overlayWithGradient.left = null;
+            edits.overlayWithGradient.radius = {};
+
+            assert.throws(() => imageHandler.generateGradient(edits, metadata));
+        });
+
+        it(`Should throw an error for null offsets`,
+            async function() {
+            edits.overlayWithGradient.top = null;
+
+            assert.throws(() => imageHandler.generateGradient(edits, metadata));
+        });
+
+        it(`Should throw an error for non-string offsets`,
+            async function() {
+            edits.overlayWithGradient.top = {};
+
+            assert.throws(() => imageHandler.generateGradient(edits, metadata));
+        });
+    });
+});
+
+// ----------------------------------------------------------------------------
+// [async] buildStops()
+// ----------------------------------------------------------------------------
+describe('buildStops()', function() {
+    describe('001/validParameters', function() {
+        it(`Should pass if the proper parameters are passed to the function`,
+            function() {
+
+            const stops = [
+                ['0%', {r: 0, g: 255, b: 0, alpha: 1}],
+                ['50%', {r: 128, g: 255, b: 0, alpha: 0.5}],
+                ['75%', {r: 255, g: 255, b: 255, alpha: 0}]
+            ];
+
+            const imageHandler = new ImageHandler();
+
+            assert.deepEqual(
+                imageHandler.buildStops(stops),
+                '<stop offset="0%" style="stop-color:rgb(0,255,0);stop-opacity:1" />' +
+                '<stop offset="50%" style="stop-color:rgb(128,255,0);stop-opacity:0.5" />' +
+                '<stop offset="75%" style="stop-color:rgb(255,255,255);stop-opacity:0" />'
+            );
+        });
+    });
+    describe('002/errorHandling', function() {
+        let stops;
+        let imageHandler;
+
+        beforeEach(() => {
+            stops = [
+                ['0%', {r: 0, g: 255, b: 0, alpha: 1}],
+                ['50%', {r: 128, g: 255, b: 0, alpha: 0.5}],
+                ['75%', {r: 255, g: 255, b: 255, alpha: 0}]
+            ];
+
+            imageHandler = new ImageHandler();
+        });
+
+        it(`Should throw an error for out of range offsets`,
+            async function() {
+            stops[0][0] = '-50%';
+
+            assert.throws(() => imageHandler.buildStops(stops));
+        });
+
+        it(`Should throw an error for invalid offsets`,
+            async function() {
+            stops[0][0] = null;
+            stops[1][0] = {};
+            stops[2][0] = NaN;
+
+            assert.throws(() => imageHandler.buildStops(stops));
+        });
+
+        it(`Should throw an error for out of range color values`,
+            async function() {
+            stops[0][1].r = '-50';
+            stops[0][1].g = '320';
+            stops[0][1].b = '6969';
+
+            assert.throws(() => imageHandler.buildStops(stops));
+        });
+
+        it(`Should throw an error for invalid color values`,
+            async function() {
+            stops[0][1].r = null;
+            stops[0][1].g = {};
+            stops[0][1].b = NaN;
+
+            assert.throws(() => imageHandler.buildStops(stops));
+        });
+
+        it(`Should throw an error for out of range alpha values`,
+            async function() {
+            stops[0][1].alpha = '2';
+
+            assert.throws(() => imageHandler.buildStops(stops));
+        });
+
+        it(`Should throw an error for invalid alpha values`,
+            async function() {
+            stops[0][1].alpha = null;
+
+            assert.throws(() => imageHandler.buildStops(stops));
+        });
+    });
+});
