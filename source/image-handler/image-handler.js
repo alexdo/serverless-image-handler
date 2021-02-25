@@ -136,6 +136,18 @@ class ImageHandler {
                         message: 'The padding value you provided exceeds the boundaries of the original image. Please try choosing a smaller value or applying padding via Sharp for greater specificity.'
                     });
                 }
+            } else if (key === 'overlayWithGradient') {
+                const input = Buffer.from(this.generateGradient(edits, metadata), 'utf8');
+
+                try {
+                    image.composite([{ input }]);
+                } catch (err) {
+                    throw ({
+                        status: err.statusCode ? err.statusCode : 500,
+                        code: err.code,
+                        message: err.message
+                    });
+                }
             } else {
                 image[key](value);
             }
@@ -249,6 +261,158 @@ class ImageHandler {
                 })
             }
         }
+    }
+
+    /**
+     * @param {Object} edits
+     * @param {Object} metadata
+     *
+     * @returns {string}
+     */
+    generateGradient(edits, metadata) {
+        const { extend, overlayWithGradient, resize } = edits;
+        let { width, height } = metadata;
+
+        if (resize) {
+            width = resize.width || width;
+            height = resize.height || height;
+        }
+
+        if (extend) {
+            if (typeof extend === 'number') {
+                width += extend * 2;
+                height += extend * 2;
+            } else {
+                const { top, left, right, bottom } = Object.assign(
+                    {},
+                    {
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                    },
+                    extend
+                );
+
+                width += left + right;
+                height += top + bottom;
+            }
+        }
+
+        const defaults = {
+            top: '50%',
+            left: '50%',
+            radius: width / 2,
+            stops: [
+                ['0%', { r: 0, g: 0, b: 0, alpha: 0}],
+                ['100%', { r: 0, g: 0, b: 0, alpha: 0.05}]
+            ],
+        };
+
+        const settings = Object.assign({}, defaults, overlayWithGradient);
+
+        Object.entries(settings).forEach(([key, value]) => {
+            switch (key) {
+                case 'top':
+                case 'left':
+                case 'radius':
+                    if (!/^\d+[p%]?$/.test(String(value))) {
+                        throw ({
+                            status: 400,
+                            message: `Invalid argument 'edits.overlayWithGradient.${key}' provided for ImageHandler::generateGradient: ${value}`
+                        });
+                    }
+
+                    settings[key] = String(value).replace('p', '%');
+
+                    return;
+
+                default:
+                    return;
+            }
+        });
+
+        return '' +
+            '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '">' +
+                '<defs>' +
+                    '<radialGradient id="rgrad" cx="' + settings.left + '" cy="' + settings.top + '" r="' + settings.radius + '" gradientUnits="userSpaceOnUse">' +
+                        this.buildStops(settings.stops) +
+                    '</radialGradient>' +
+                '</defs>' +
+                '<rect x="0" y="0" width="' + width + '" height="' + height + '" fill="url(#rgrad)" />' +
+            '</svg>';
+    }
+
+    /**
+     * @param {[string, Object]} stops
+     *
+     * @returns {string}
+     */
+    buildStops(stops) {
+        if (!Array.isArray(stops) || !stops.length) {
+            throw ({
+                status: 400,
+                message: `Invalid argument 'stops' provided for ImageHandler::buildStops: ${value}`
+            });
+        }
+
+        return stops.map((stop, index) => {
+            if (stop.length !== 2) {
+                throw ({
+                    status: 400,
+                    message: `Not enough arguments provided for 'stops[${index}]' ImageHandler::buildStops`
+                });
+            }
+
+            if (!/^([1-9][0-9]?|100|0)[p%]$/.test(String(stop[0]))) {
+                throw ({
+                    status: 400,
+                    message: `Invalid argument 'stops[${index}][0]' provided for ImageHandler::buildStops: ${stops[index][0]}`
+                });
+            }
+
+            const offset = String(stop[0]).replace('p', '%');
+
+            const defaults = {
+                r: 0,
+                g: 0,
+                b: 0,
+                alpha: 0,
+            };
+
+            const settings = Object.assign({}, defaults, stop[1]);
+
+            Object.entries(settings).forEach(([key, value]) => {
+                switch (key) {
+                    case 'r':
+                    case 'g':
+                    case 'b':
+                        if (typeof value !== 'number' || value < 0 || value > 255) {
+                            throw ({
+                                status: 400,
+                                message: `Invalid argument 'stops[${index}][1].${key}' provided for ImageHandler::buildStops: ${value}`
+                            });
+                        }
+
+                        return;
+
+                    case 'alpha':
+                        if (typeof value !== 'number' || value < 0 || value > 1) {
+                            throw ({
+                                status: 400,
+                                message: `Invalid argument 'stops[${index}][1].${key}' provided for ImageHandler::buildStops: ${value}`
+                            });
+                        }
+
+                        return;
+
+                    default:
+                        return;
+                }
+            });
+
+            return `<stop offset="${offset}" style="stop-color:rgb(${settings.r},${settings.g},${settings.b});stop-opacity:${settings.alpha}" />`;
+        }).join('');
     }
 }
 
