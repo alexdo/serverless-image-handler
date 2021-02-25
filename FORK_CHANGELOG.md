@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2020-02-24
+### Added
+- `edits.overlayWithGradient` handling to create a buffer of an SVG gradient and composite the result over the
+  processed image
+- `Dockerfile`
+
 ## [1.6.0] - 2021-02-19
 ### Changed
 - `toFormat` to `outputFormat` parameter to be consistent with sharp API. `toFormat` will still be supported until 2.0.
