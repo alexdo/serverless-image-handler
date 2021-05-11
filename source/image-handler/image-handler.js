@@ -316,7 +316,7 @@ class ImageHandler {
                 case 'top':
                 case 'left':
                 case 'radius':
-                    if (!/^\d+[p%]?$/.test(String(value))) {
+                    if (!/^[0-9]+(\.[0-9]+)?[p%]?$/.test(String(value))) {
                         throw ({
                             status: 400,
                             message: `Invalid argument 'edits.overlayWithGradient.${key}' provided for ImageHandler::generateGradient: ${value}`

@@ -487,7 +487,7 @@ describe('generateGradient()', function() {
                 overlayWithGradient: {
                     top: '20%',
                     left: '55p',
-                    radius: '120',
+                    radius: '120.5',
                     stops: [],
                 }
             }
@@ -505,7 +505,7 @@ describe('generateGradient()', function() {
                 imageHandler.generateGradient(edits, metadata),
                 '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="200">' +
                     '<defs>' +
-                        '<radialGradient id="rgrad" cx="55%" cy="20%" r="120" gradientUnits="userSpaceOnUse">' +
+                        '<radialGradient id="rgrad" cx="55%" cy="20%" r="120.5" gradientUnits="userSpaceOnUse">' +
                         '</radialGradient>' +
                     '</defs>' +
                     '<rect x="0" y="0" width="100" height="200" fill="url(#rgrad)" />' +
@@ -541,23 +541,9 @@ describe('generateGradient()', function() {
 
         it(`Should throw an error for invalid values`,
             async function() {
-            edits.overlayWithGradient.top = 'foo';
+            edits.overlayWithGradient.top = '10.';
             edits.overlayWithGradient.left = null;
             edits.overlayWithGradient.radius = {};
-
-            assert.throws(() => imageHandler.generateGradient(edits, metadata));
-        });
-
-        it(`Should throw an error for null offsets`,
-            async function() {
-            edits.overlayWithGradient.top = null;
-
-            assert.throws(() => imageHandler.generateGradient(edits, metadata));
-        });
-
-        it(`Should throw an error for non-string offsets`,
-            async function() {
-            edits.overlayWithGradient.top = {};
 
             assert.throws(() => imageHandler.generateGradient(edits, metadata));
         });
