@@ -67,8 +67,7 @@
         "DefaultFormat" : {
             "Description" : "Always convert an image to this format when AutoWebP is not used and no other outputFormat edit parameter is given",
             "Default" : "",
-            "Type" : "String",
-            "AllowedValues" : [ "jpeg", "jpg", "png", "webp", "tiff", "heif", "gif" ]
+            "Type" : "String"
         }
     },
     "Metadata": {
@@ -889,7 +888,7 @@
             "Value" : { "Ref" : "AutoWebP" }
         },
         "DefaultFormat" : {
-            "Description" : "Use DefaultFormat when AutoWebPEnabled is disabled and no outputFormat edit was given.",
+            "Description" : "Use DefaultFormat when AutoWebPEnabled is not applicable and no outputFormat edit was given.",
             "Value" : { "Ref" : "DefaultFormat" }
         },
         "MaximumDimensions" : {

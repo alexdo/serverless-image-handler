@@ -346,7 +346,9 @@ class ImageRequest {
             return 'webp';
         } else if (this.requestType === 'Default') {
             const decoded = this.decodeRequest(event);
-            return decoded.outputFormat;
+            if (decoded.outputFormat) {
+                return decoded.outputFormat;
+            }
         }
 
         const defaultFormat = DEFAULT_FORMAT ? `${DEFAULT_FORMAT}`.toLowerCase() : '';
