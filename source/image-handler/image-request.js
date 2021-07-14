@@ -337,14 +337,23 @@ class ImageRequest {
      * @param {Object} event - The request body.
      */
     getOutputFormat(event) {
-        const autoWebP = `${process.env.AUTO_WEBP}`.toLowerCase() || 'no';
+        const { DEFAULT_FORMAT, AUTO_WEBP } = process.env
+
+        const autoWebP = AUTO_WEBP ? `${AUTO_WEBP}`.toLowerCase() : 'no';
         const headers = event.headers || {};
         const acceptHeader = headers.Accept || headers.accept;
         if (autoWebP === 'yes' && typeof acceptHeader === 'string' && acceptHeader.includes('image/webp')) {
             return 'webp';
         } else if (this.requestType === 'Default') {
             const decoded = this.decodeRequest(event);
-            return decoded.outputFormat;
+            if (decoded.outputFormat) {
+                return decoded.outputFormat;
+            }
+        }
+
+        const defaultFormat = DEFAULT_FORMAT ? `${DEFAULT_FORMAT}`.toLowerCase() : '';
+        if (defaultFormat !== '') {
+            return defaultFormat;
         }
 
         return null;

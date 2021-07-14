@@ -63,6 +63,11 @@
             "Default" : 1,
             "Type" : "Number",
             "AllowedValues" : [ 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ]
+        },
+        "DefaultFormat" : {
+            "Description" : "Always convert an image to this format when AutoWebP is not used and no other outputFormat edit parameter is given",
+            "Default" : "",
+            "Type" : "String"
         }
     },
     "Metadata": {
@@ -78,7 +83,7 @@
                 },
                 {
                     "Label": { "default": "Optimization" },
-                    "Parameters": [ "AutoWebP", "MaxDimensions", "AllowedDimensions" ]
+                    "Parameters": [ "DefaultFormat", "AutoWebP", "MaxDimensions", "AllowedDimensions" ]
                 },
                 {
                     "Label": { "default": "Demo UI" },
@@ -408,6 +413,9 @@
                 "Timeout": 30,
                 "Environment" : {
                     "Variables" : {
+                        "DEFAULT_FORMAT" : {
+                            "Ref" : "DefaultFormat"
+                        },
                         "AUTO_WEBP" : {
                             "Ref" : "AutoWebP"
                         },
@@ -878,6 +886,10 @@
         "AutoWebPEnabled" : {
             "Description" : "Indicates whether automatic WebP transformation has been enabled for the image handler API.",
             "Value" : { "Ref" : "AutoWebP" }
+        },
+        "DefaultFormat" : {
+            "Description" : "Use DefaultFormat when AutoWebPEnabled is not applicable and no outputFormat edit was given.",
+            "Value" : { "Ref" : "DefaultFormat" }
         },
         "MaximumDimensions" : {
             "Description" : "Maximum dimension allowed for image scaling",
