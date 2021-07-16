@@ -68,7 +68,7 @@
             "Description" : "Always convert an image to this format when AutoWebP is not used and no other outputFormat edit parameter is given",
             "Default" : "",
             "Type" : "String"
-        }
+        },
         "PersistTrimmedImage" : {
             "Description" : "Store a _trimmed image version alongside the original and reuse it for subsequent requests to improve performance.",
             "Default" : 0,
