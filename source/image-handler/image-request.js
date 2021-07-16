@@ -13,6 +13,8 @@
 
 const ThumborMapping = require('./thumbor-mapping');
 const logger = require('./logger');
+const S3 = require('aws-sdk/clients/s3');
+const ImageHandler = require('./image-handler.js');
 
 class ImageRequest {
 
@@ -23,10 +25,12 @@ class ImageRequest {
      */
     async setup(event) {
         try {
+            this.decodedRequest = this.decodeRequest(event);
             this.sizeOverride = this.parseSizeOverride(event);
             this.requestType = this.parseRequestType(event);
             this.edits = this.parseImageEdits(event, this.requestType);
             this.outputOptions = this.parseOutputOptions(event, this.requestType);
+            this.isPersistTrimActive = this.parseIsPersistTrimActive(event, this.requestType, this.edits);
 
             if (this.sizeOverride) {
                 // override size params given in base64 content with
@@ -45,7 +49,15 @@ class ImageRequest {
 
             this.bucket = this.parseImageBucket(event, this.requestType);
             this.key = this.parseImageKey(event, this.requestType);
-            this.originalImage = await this.getOriginalImage(this.bucket, this.key);
+
+            const {originalImage, isTrimmed} = await this.getOriginalImage(
+                this.bucket,
+                this.key,
+                this.isPersistTrimActive,
+            );
+
+            this.originalImage = originalImage;
+            this.originalImageIsTrimmed = isTrimmed;
 
             /* Decide the output format of the image.
              * 1) If the format is provided, the output format is the provided format.
@@ -76,6 +88,14 @@ class ImageRequest {
                 }
             }
 
+            if (this.isPersistTrimActive && !this.originalImageIsTrimmed) {
+                this.originalImage = await this.trimAndPersist(this.bucket, this.key, this.originalImage);
+                this.originalImageIsTrimmed = true;
+            }
+
+            if (this.originalImageIsTrimmed) {
+                delete this.edits.trim;
+            }
 
             return Promise.resolve(this);
         } catch (err) {
@@ -83,54 +103,97 @@ class ImageRequest {
         }
     }
 
+    async trimAndPersist(bucket, key, originalImage) {
+        const keyTrimmed = this.getTrimmedImageKey(key);
+
+        const s3 = new S3();
+        const imageHandler = new ImageHandler();
+
+        const trimmedImage = await imageHandler.trim(originalImage);
+
+        const imageLocation = { Bucket: bucket, Key: keyTrimmed, Body: trimmedImage };
+
+        s3.putObject(imageLocation).promise()
+            .catch(e => {
+                logger.error('could not persist trimmed image', e, this.decodedRequest)
+            });
+
+        return trimmedImage;
+    }
+
+    getTrimmedImageKey(key) {
+        const filePath = key.split('.');
+        const keyTrimmed = filePath[0] + '_trimmed' + '.' + filePath[1];
+        return keyTrimmed;
+    }
+
     /**
      * Gets the original image from an Amazon S3 bucket.
      * @param {String} bucket - The name of the bucket containing the image.
      * @param {String} key - The key name corresponding to the image.
-     * @return {Promise} - The original image or an error.
+     * @param {String} isPersistTrimActive - Whether a trimmed image might have been created before and should be used prerably
+     * @return {Promise} - The original image and whether it is a trimmed version or an error.
      */
-    async getOriginalImage(bucket, key) {
-        const S3 = require('aws-sdk/clients/s3');
+    async getOriginalImage(bucket, key, isPersistTrimActive) {
         const s3 = new S3();
-        const imageLocation = { Bucket: bucket, Key: key };
+        let originalImage = null;
+        let trimmedImageFound = false;
+
         try {
-            const originalImage = await s3.getObject(imageLocation).promise();
+            if (isPersistTrimActive) {
+                const trimmedImageLocation = { Bucket: bucket, Key: this.getTrimmedImageKey(key) };
 
-            if (originalImage.ContentType) {
-                this.ContentType = originalImage.ContentType;
-            } else {
-                this.ContentType = "image";
+                originalImage = await s3.getObject(trimmedImageLocation)
+                    .promise()
+                    .catch(e => {
+                        logger.log('Could not obtain trimmed image', e);
+                        return null;
+                    });
+                trimmedImageFound = !!originalImage;
             }
 
-            if (originalImage.Expires) {
-                const expiresDate = new Date(originalImage.Expires);
-                if (!isNaN(expiresDate)) {
-                    this.Expires = expiresDate.toUTCString();
-                }
+            if (!originalImage) {
+                const imageLocation = { Bucket: bucket, Key: key };
+                originalImage = await s3.getObject(imageLocation).promise();
             }
-
-            if (originalImage.LastModified) {
-                const lastModifiedDate = new Date(originalImage.LastModified);
-                if (!isNaN(lastModifiedDate)) {
-                    this.LastModified = lastModifiedDate.toUTCString();
-                }
-            }
-
-            if (originalImage.CacheControl) {
-                this.CacheControl = originalImage.CacheControl;
-            } else {
-                this.CacheControl = "max-age=31536000,public";
-            }
-
-            return Promise.resolve(originalImage.Body);
-        }
-        catch(err) {
+        } catch(err) {
             return Promise.reject({
                 status: ('NoSuchKey' === err.code) ? 404 : 500,
                 code: err.code,
                 message: err.message
             });
         }
+
+        if (originalImage.ContentType) {
+            this.ContentType = originalImage.ContentType;
+        } else {
+            this.ContentType = "image";
+        }
+
+        if (originalImage.Expires) {
+            const expiresDate = new Date(originalImage.Expires);
+            if (!isNaN(expiresDate)) {
+                this.Expires = expiresDate.toUTCString();
+            }
+        }
+
+        if (originalImage.LastModified) {
+            const lastModifiedDate = new Date(originalImage.LastModified);
+            if (!isNaN(lastModifiedDate)) {
+                this.LastModified = lastModifiedDate.toUTCString();
+            }
+        }
+
+        if (originalImage.CacheControl) {
+            this.CacheControl = originalImage.CacheControl;
+        } else {
+            this.CacheControl = "max-age=31536000,public";
+        }
+
+        return Promise.resolve({
+            originalImage: originalImage.Body,
+            isTrimmed: trimmedImageFound,
+        });
     }
 
     /**
@@ -413,6 +476,19 @@ class ImageRequest {
         return {
             ...(decoded.outputOptions || {})
         };
+    }
+
+    parseIsPersistTrimActive(event, requestType, edits) {
+        if (requestType !== "Default") {
+            return false;
+        }
+
+        if (process.env.PERSIST_TRIMMED_IMAGE) {
+            return true;
+        }
+
+        const decoded = this.decodeRequest(event);
+        return !!decoded.persistTrimmedImage && !!edits.trim;
     }
 }
 

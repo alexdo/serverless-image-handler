@@ -50,6 +50,12 @@ class ImageHandler {
         }
     }
 
+    async trim(originalImage) {
+        const image = sharp(originalImage, { failOnError: false });
+        const buffer = await image.trim().toBuffer();
+        return buffer
+    }
+
     /**
      * Applies image modifications to the original image based on edits
      * specified in the ImageRequest.

@@ -69,6 +69,11 @@
             "Default" : "",
             "Type" : "String"
         }
+        "PersistTrimmedImage" : {
+            "Description" : "Store a _trimmed image version alongside the original and reuse it for subsequent requests to improve performance.",
+            "Default" : 0,
+            "Type" : "Number"
+        }
     },
     "Metadata": {
         "AWS::CloudFormation::Interface": {
@@ -83,7 +88,7 @@
                 },
                 {
                     "Label": { "default": "Optimization" },
-                    "Parameters": [ "DefaultFormat", "AutoWebP", "MaxDimensions", "AllowedDimensions" ]
+                    "Parameters": [ "DefaultFormat", "AutoWebP", "MaxDimensions", "AllowedDimensions", "PersistTrimmedImage" ]
                 },
                 {
                     "Label": { "default": "Demo UI" },
@@ -415,6 +420,9 @@
                     "Variables" : {
                         "DEFAULT_FORMAT" : {
                             "Ref" : "DefaultFormat"
+                        },
+                        "PERSIST_TRIMMED_IMAGE" : {
+                            "Ref" : "PersistTrimmedImage"
                         },
                         "AUTO_WEBP" : {
                             "Ref" : "AutoWebP"
